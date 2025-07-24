@@ -87,8 +87,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           active: false,
         },
         {
-          title: "Farmers",
-          href: "/registration/farmers",
+          title: "Farms",
+          href: "/registration/farms",
           active: false,
         },
         {
