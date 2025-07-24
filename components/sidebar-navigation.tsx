@@ -2,6 +2,7 @@
 
 import type React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 import {
   BarChart3,
@@ -31,9 +32,26 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+  const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [showSearchResults, setShowSearchResults] = useState(false)
+
+  // Function to get active route display
+  const getActiveRouteDisplay = () => {
+    if (pathname === '/') return 'Overview'
+    if (pathname.startsWith('/registration/planters')) return 'Registration • Planters'
+    if (pathname.startsWith('/registration/farms')) return 'Registration • Farms'
+    if (pathname.startsWith('/registration/haulers')) return 'Registration • Haulers'
+    if (pathname.startsWith('/equipment/trucks')) return 'Equipment • Trucks'
+    if (pathname.startsWith('/equipment/tractors')) return 'Equipment • Tractors'
+    if (pathname.startsWith('/equipment/calendar')) return 'Equipment • Calendar'
+    if (pathname.startsWith('/reports/planters')) return 'Reports • Planters Production'
+    if (pathname.startsWith('/prices')) return 'Sugar Prices'
+    if (pathname.startsWith('/assistance/fertilizer')) return 'Farm Assistance • Fertilizer'
+    if (pathname.startsWith('/settings')) return 'Settings'
+    return 'Dashboard'
+  }
 
   // Search data
   const searchItems = [
@@ -183,7 +201,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Dashboard Sidebar - Mobile First */}
       <aside
         className={cn(
-          "dashboard-sidebar bg-gradient-to-b from-farm-green-50 to-farm-earth-50 border-r border-farm-green-200",
+          "dashboard-sidebar bg-gradient-to-b from-farm-green-100 to-farm-green-200 border-r border-farm-green-200",
           "fixed lg:relative top-0 left-0 h-full w-80 lg:w-72 transform transition-transform duration-300 ease-in-out",
           "flex flex-col",
           "z-60 lg:z-auto shadow-2xl lg:shadow-none", // Higher z-index for mobile, normal for desktop
@@ -191,18 +209,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         )}
         style={{ 
           zIndex: 60,
-          backgroundColor: 'rgb(240 253 244)', // Ensure background is visible
+          backgroundColor: 'rgb(220 252 231)', // Darker background
         }}
       >
         {/* SIDEBAR HEADER - Logo and Branding */}
-        <header className="flex-shrink-0 h-16 flex items-center justify-between px-4 lg:px-6 border-b border-farm-green-200 bg-white/80 backdrop-blur-sm shadow-sm">
+        <header className="flex-shrink-0 h-16 flex items-center justify-between px-4 lg:px-6 border-b border-farm-green-200 bg-farm-green-300 shadow-sm">
           <Link href="/" className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-farm-green-500 to-farm-green-600 shadow-lg">
               <Wheat className="h-6 w-6 text-white" />
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-bold text-farm-green-700">Phil Agro</span>
-              <span className="text-xs text-farm-green-500">Agriculture Management</span>
+              <span className="text-xs text-farm-green-700">Agriculture Management</span>
             </div>
           </Link>
           <Button
@@ -216,7 +234,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         {/* SCROLLABLE NAVIGATION - Menu Items */}
-        <nav className="flex-1 overflow-y-auto px-4 pt-4 space-y-2 bg-gradient-to-b from-farm-green-50 to-farm-earth-50">
+        <nav className="flex-1 overflow-y-auto px-4 pt-4 space-y-2 bg-gradient-to-b from-farm-green-100 to-farm-green-200">
           {routes.map((route) => (
             <div key={route.title}>
               {route.submenu ? (
@@ -283,9 +301,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </Button>
               {/* Page Title - Moved from center to left */}
               <div className="flex items-center gap-2 text-sm text-farm-green-600">
-                <span className="hidden sm:inline font-medium">Phil Agro-Industrial Technologist Agriculture</span>
+                <span className="text-xs sm:text-sm font-medium">Management Dashboard</span>
                 <span className="hidden sm:inline text-farm-green-400">•</span>
-                <span className="text-xs sm:text-sm">Management Dashboard</span>
+                <span className="text-xs sm:text-sm text-farm-green-700">
+                  {getActiveRouteDisplay()}
+                </span>
               </div>
             </div>
 
