@@ -253,7 +253,6 @@ const harvestingData = [
 
 export default function FarmManagement() {
   const [activeTab, setActiveTab] = useState("overview")
-  const [activeStage, setActiveStage] = useState("planting")
 
   const [showAddBlock, setShowAddBlock] = useState(false)
   const [showAddPlanting, setShowAddPlanting] = useState(false)
@@ -359,42 +358,8 @@ export default function FarmManagement() {
           </Card>
         </div>
 
-        {/* Main Tabs */}
-        <Tabs value={activeStage} onValueChange={setActiveStage} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 border border-farm-green-200 p-1">
-            <TabsTrigger 
-              value="land-prep" 
-              className="data-[state=active]:bg-farm-green-500 data-[state=active]:text-white"
-            >
-              <Tractor className="h-4 w-4 mr-2" />
-              Land Prep
-            </TabsTrigger>
-            <TabsTrigger 
-              value="planting" 
-              className="data-[state=active]:bg-farm-green-500 data-[state=active]:text-white"
-            >
-              <Sprout className="h-4 w-4 mr-2" />
-              Planting
-            </TabsTrigger>
-            <TabsTrigger 
-              value="fertilizer" 
-              className="data-[state=active]:bg-farm-green-500 data-[state=active]:text-white"
-            >
-              <Droplets className="h-4 w-4 mr-2" />
-              Fertilizer
-            </TabsTrigger>
-            <TabsTrigger 
-              value="harvesting" 
-              className="data-[state=active]:bg-farm-green-500 data-[state=active]:text-white"
-            >
-              <Scissors className="h-4 w-4 mr-2" />
-              Harvesting
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Sub Tabs */}
-          <div className="mt-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {/* Main Navigation Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-6 border border-farm-green-200 p-1">
                 <TabsTrigger value="overview" className="data-[state=active]:bg-farm-green-500 data-[state=active]:text-white">
                   <BarChart3 className="h-4 w-4 mr-2" />
@@ -2306,8 +2271,6 @@ export default function FarmManagement() {
                 </Card>
               </TabsContent>
             </Tabs>
-          </div>
-        </Tabs>
       </div>
     </DashboardLayout>
   )

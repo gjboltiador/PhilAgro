@@ -96,7 +96,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       active: true,
     },
     {
-      title: "Registration",
+      title: "Management",
       icon: Users,
       submenu: [
         {
@@ -246,38 +246,56 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   </div>
                   {/* Submenu Items */}
                   <div className="ml-6 space-y-1">
-                    {route.submenu.map((submenu) => (
-                      <Link
-                        key={submenu.title}
-                        href={submenu.href}
-                        onClick={() => setSidebarOpen(false)}
-                        className={cn(
-                          "flex items-center gap-3 px-3 pt-2 pb-1 text-sm rounded-lg transition-colors",
-                          submenu.active
-                            ? "bg-farm-green-200 font-medium text-farm-green-800 shadow-sm"
-                            : "text-farm-green-600 hover:bg-farm-green-100 hover:text-farm-green-800",
-                        )}
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                        <span>{submenu.title}</span>
-                      </Link>
-                    ))}
+                    {route.submenu.map((submenu) => {
+                      const isActive = pathname === submenu.href || pathname.startsWith(submenu.href + '/')
+                      return (
+                        <Link
+                          key={submenu.title}
+                          href={submenu.href}
+                          onClick={() => setSidebarOpen(false)}
+                          className={cn(
+                            "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200 ease-in-out relative",
+                            "hover:bg-farm-green-200 hover:text-farm-green-900 hover:shadow-md hover:scale-[1.02] hover:border hover:border-farm-green-300",
+                            "active:scale-[0.98] active:bg-farm-green-300",
+                            isActive
+                              ? "bg-farm-green-500 text-white font-medium shadow-md border border-white"
+                              : "text-farm-green-600",
+                          )}
+                        >
+                          <ChevronRight className={cn(
+                            "h-4 w-4 transition-colors",
+                            isActive ? "text-white" : "text-farm-green-500"
+                          )} />
+                          <span>{submenu.title}</span>
+                        </Link>
+                      )
+                    })}
                   </div>
                 </div>
               ) : (
-                <Link
-                  href={route.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 px-3 pt-2 pb-1 text-sm rounded-lg transition-colors",
-                    route.active
-                      ? "bg-farm-green-200 font-medium text-farm-green-800 shadow-sm"
-                      : "text-farm-green-600 hover:bg-farm-green-100 hover:text-farm-green-800",
-                  )}
-                >
-                  <route.icon className="h-5 w-5" />
-                  <span>{route.title}</span>
-                </Link>
+                (() => {
+                  const isActive = pathname === route.href || pathname.startsWith(route.href + '/')
+                  return (
+                    <Link
+                      href={route.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200 ease-in-out relative",
+                        "hover:bg-farm-green-200 hover:text-farm-green-900 hover:shadow-md hover:scale-[1.02] hover:border hover:border-farm-green-300",
+                        "active:scale-[0.98] active:bg-farm-green-300",
+                        isActive
+                          ? "bg-farm-green-500 text-white font-medium shadow-md border border-white"
+                          : "text-farm-green-600",
+                      )}
+                    >
+                      <route.icon className={cn(
+                        "h-5 w-5 transition-colors",
+                        isActive ? "text-white" : "text-farm-green-500"
+                      )} />
+                      <span>{route.title}</span>
+                    </Link>
+                  )
+                })()
               )}
             </div>
           ))}
@@ -353,7 +371,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
               <Button variant="ghost" size="icon" className="relative hover:bg-farm-green-100">
                 <Bell className="h-5 w-5 text-farm-green-600" />
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-farm-earth-500">3</Badge>
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-orange-500 text-white flex items-center justify-center font-medium">3</Badge>
               </Button>
               <Button variant="ghost" size="icon" className="hover:bg-farm-green-100">
                 <User className="h-5 w-5 text-farm-green-600" />
@@ -373,7 +391,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center gap-2 lg:gap-4">
               <span className="text-xs lg:text-sm">© 2024 Phil Agro-Industrial Technologist Agriculture</span>
               <span className="hidden lg:inline">•</span>
-              <span className="hidden lg:inline">Sugar Planters Association Management System</span>
+              <span className="hidden lg:inline">Logged in as: Godfrey J. Boltiador</span>
             </div>
             <div className="flex items-center gap-2 lg:gap-4">
               <span className="hidden md:inline text-xs lg:text-sm">Version 1.0.0</span>
