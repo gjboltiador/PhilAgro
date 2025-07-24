@@ -258,6 +258,25 @@
   @apply bg-farm-green-400;
 }
 
+/* Custom scrollbar for dialogs */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: #f3f4f6;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #10b981;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #059669;
+}
+
 /* Mobile-specific utilities */
 @media (max-width: 640px) {
   .dashboard-main-content {
