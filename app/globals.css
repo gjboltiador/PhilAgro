@@ -1,0 +1,290 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 48 100% 98%;
+    --foreground: 25 25% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 25 25% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 25 25% 15%;
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 39 100% 95%;
+    --secondary-foreground: 25 25% 15%;
+    --muted: 39 100% 95%;
+    --muted-foreground: 25 25% 45%;
+    --accent: 142 76% 90%;
+    --accent-foreground: 25 25% 15%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 39 100% 90%;
+    --input: 39 100% 90%;
+    --ring: 142 76% 36%;
+    --radius: 0.75rem;
+
+    /* Sidebar colors for farming theme */
+    --sidebar-background: 142 76% 96%;
+    --sidebar-foreground: 25 25% 15%;
+    --sidebar-primary: 142 76% 36%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 142 76% 90%;
+    --sidebar-accent-foreground: 25 25% 15%;
+    --sidebar-border: 39 100% 85%;
+    --sidebar-ring: 142 76% 36%;
+  }
+
+  .dark {
+    --background: 25 25% 8%;
+    --foreground: 39 100% 95%;
+    --card: 25 25% 10%;
+    --card-foreground: 39 100% 95%;
+    --popover: 25 25% 10%;
+    --popover-foreground: 39 100% 95%;
+    --primary: 142 76% 45%;
+    --primary-foreground: 25 25% 8%;
+    --secondary: 25 25% 15%;
+    --secondary-foreground: 39 100% 95%;
+    --muted: 25 25% 15%;
+    --muted-foreground: 39 100% 65%;
+    --accent: 25 25% 15%;
+    --accent-foreground: 39 100% 95%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 25 25% 15%;
+    --input: 25 25% 15%;
+    --ring: 142 76% 45%;
+
+    /* Dark mode sidebar colors */
+    --sidebar-background: 25 25% 10%;
+    --sidebar-foreground: 39 100% 95%;
+    --sidebar-primary: 142 76% 45%;
+    --sidebar-primary-foreground: 25 25% 8%;
+    --sidebar-accent: 25 25% 15%;
+    --sidebar-accent-foreground: 39 100% 95%;
+    --sidebar-border: 25 25% 15%;
+    --sidebar-ring: 142 76% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-image: radial-gradient(circle at 25px 25px, rgba(34, 197, 94, 0.05) 2%, transparent 0%),
+      radial-gradient(circle at 75px 75px, rgba(251, 146, 60, 0.05) 2%, transparent 0%);
+    background-size: 100px 100px;
+  }
+}
+
+/* Dashboard Layout Styles - Mobile First */
+.dashboard-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow: visible;
+}
+
+/* Desktop Layout - Updated for header and footer inside main content */
+@media (min-width: 1024px) {
+  .dashboard-wrapper {
+    display: flex !important;
+    flex-direction: row !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+  }
+  
+  .dashboard-sidebar {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    height: 100vh !important;
+    width: 280px !important;
+    z-index: auto !important;
+    transform: none !important;
+    overflow-y: auto !important;
+    flex-shrink: 0 !important;
+    align-self: stretch !important;
+  }
+  
+  .dashboard-main-content {
+    flex: 1 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    height: 100vh !important;
+    align-self: stretch !important;
+  }
+  
+  .dashboard-header {
+    flex-shrink: 0 !important;
+    height: 64px !important;
+  }
+  
+  .dashboard-main-content main {
+    flex: 1 !important;
+    overflow-y: auto !important;
+  }
+  
+  .dashboard-footer {
+    flex-shrink: 0 !important;
+  }
+  
+  /* Ensure sidebar header matches main header */
+  .dashboard-sidebar header {
+    height: 64px !important;
+  }
+  
+
+}
+
+/* Mobile Layout */
+@media (max-width: 1023px) {
+  .dashboard-wrapper {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .dashboard-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 100vh !important;
+    width: 320px !important;
+    z-index: 60 !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    overflow: visible !important;
+  }
+  
+  .dashboard-sidebar.open {
+    transform: translateX(0) !important;
+  }
+  
+  .dashboard-main-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100vh;
+  }
+  
+  .dashboard-header {
+    flex-shrink: 0;
+  }
+  
+  .dashboard-main-content main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+  }
+  
+  .dashboard-footer {
+    flex-shrink: 0;
+  }
+}
+
+/* Desktop Layout */
+@media (min-width: 1024px) {
+  .dashboard-wrapper {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: 1fr auto;
+    grid-template-areas:
+      "sidebar main-with-header"
+      "footer footer";
+  }
+
+  .dashboard-sidebar {
+    grid-area: sidebar;
+    overflow-y: auto;
+    flex-shrink: 0;
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    height: auto !important;
+    width: auto !important;
+    z-index: auto !important;
+    transform: none !important;
+  }
+
+  .dashboard-main-with-header {
+    grid-area: main-with-header;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .dashboard-header {
+    flex-shrink: 0;
+  }
+
+  .dashboard-main-content {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+  }
+
+  .dashboard-footer {
+    grid-area: footer;
+    flex-shrink: 0;
+  }
+}
+
+/* Remove duplicate mobile layout rules - using Tailwind classes instead */
+
+/* Custom scrollbar for farming theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-farm-green-50;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-farm-green-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-farm-green-400;
+}
+
+/* Mobile-specific utilities */
+@media (max-width: 640px) {
+  .dashboard-main-content {
+    padding: 0.75rem;
+  }
+  
+  .dashboard-header {
+    padding: 0 1rem;
+  }
+  
+  .dashboard-footer {
+    padding: 0 1rem;
+  }
+}
+
+/* Touch-friendly mobile interactions */
+@media (max-width: 1023px) {
+  /* Touch-friendly button sizes */
+  button, .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improved touch targets */
+  .dashboard-sidebar nav a,
+  .dashboard-sidebar nav button {
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+  }
+}
