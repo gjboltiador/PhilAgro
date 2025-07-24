@@ -24,7 +24,8 @@ import {
   Navigation,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  Wheat
 } from "lucide-react"
 import { useState } from "react"
 
@@ -377,7 +378,7 @@ export default function PlantersProductionReport() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-1">
@@ -518,84 +519,159 @@ export default function PlantersProductionReport() {
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50">
-                        <th className="text-left p-3 font-medium text-gray-700">Planter Code</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Planter's Name</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Location</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Truck Plate No.</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Gross Weight</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Tare Weight</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Gross Cane</th>
-                        <th className="text-left p-3 font-medium text-gray-700">% Trash</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Tons Trash</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Net Weight</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Temp</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Pol Rdg</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Brix</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Cor Brix</th>
-                        <th className="text-left p-3 font-medium text-gray-700">% Pol</th>
-                        <th className="text-left p-3 font-medium text-gray-700">App Pty</th>
-                        <th className="text-left p-3 font-medium text-gray-700">LKg/TC</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Calculated Sugar</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Tons Brix</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Tons Pol</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Tons Mol</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Cane Type</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Date Time</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detailedProductionData.map((entry, index) => (
-                        <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="p-3 text-gray-900 font-medium">{entry.planterCode}</td>
-                          <td className="p-3 text-gray-900">{entry.planterName}</td>
-                          <td className="p-3 text-gray-700">{entry.location}</td>
-                          <td className="p-3 text-gray-900 font-medium">{entry.truckPlateNo}</td>
-                          <td className="p-3 text-gray-700">{entry.grossWeight.toFixed(3)}</td>
-                          <td className="p-3 text-gray-700">{entry.tareWeight.toFixed(3)}</td>
-                          <td className="p-3 text-gray-900 font-medium">{entry.grossCane.toFixed(3)}</td>
-                          <td className="p-3 text-gray-700">{entry.trashPercent}%</td>
-                          <td className="p-3 text-gray-700">{entry.tonsTrash.toFixed(3)}</td>
-                          <td className="p-3 text-gray-900 font-medium">{entry.netWeight.toFixed(3)}</td>
-                          <td className="p-3 text-gray-500">{entry.temp || "-"}</td>
-                          <td className="p-3 text-gray-700">{entry.polRdg.toFixed(1)}</td>
-                          <td className="p-3 text-gray-700">{entry.brix.toFixed(1)}</td>
-                          <td className="p-3 text-gray-700">{entry.corBrix.toFixed(1)}</td>
-                          <td className="p-3 text-gray-700">{entry.polPercent.toFixed(1)}%</td>
-                          <td className="p-3 text-gray-700">{entry.appPty.toFixed(1)}</td>
-                          <td className="p-3 text-gray-700">{entry.lkgTc.toFixed(2)}</td>
-                          <td className="p-3 text-green-700 font-medium">{entry.calculatedSugar.toFixed(2)}</td>
-                          <td className="p-3 text-gray-700">{entry.tonsBrix.toFixed(3)}</td>
-                          <td className="p-3 text-gray-700">{entry.tonsPol.toFixed(3)}</td>
-                          <td className="p-3 text-gray-700">{entry.tonsMol.toFixed(3)}</td>
-                          <td className="p-3">
-                            <Badge variant={entry.caneType === "FC" ? "default" : "secondary"} className="text-xs">
-                              {entry.caneType}
-                            </Badge>
-                          </td>
-                          <td className="p-3 text-gray-600 text-xs">{entry.dateTime}</td>
-                          <td className="p-3">
-                            <Badge 
-                              variant={
-                                entry.status === "completed" ? "default" : 
-                                entry.status === "processing" ? "secondary" : "outline"
-                              }
-                              className={
-                                entry.status === "completed" ? "bg-green-100 text-green-800" :
-                                entry.status === "processing" ? "bg-blue-100 text-blue-800" :
-                                "bg-yellow-100 text-yellow-800"
-                              }
-                            >
-                              {entry.status}
-                            </Badge>
-                          </td>
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-200 bg-gray-50">
+                          <th className="text-left p-3 font-medium text-gray-700">Planter Code</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Planter's Name</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Location</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Truck Plate No.</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Gross Weight</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Tare Weight</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Gross Cane</th>
+                          <th className="text-left p-3 font-medium text-gray-700">% Trash</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Tons Trash</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Net Weight</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Temp</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Pol Rdg</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Brix</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Cor Brix</th>
+                          <th className="text-left p-3 font-medium text-gray-700">% Pol</th>
+                          <th className="text-left p-3 font-medium text-gray-700">App Pty</th>
+                          <th className="text-left p-3 font-medium text-gray-700">LKg/TC</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Calculated Sugar</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Tons Brix</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Tons Pol</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Tons Mol</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Cane Type</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Date Time</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {detailedProductionData.map((entry, index) => (
+                          <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="p-3 text-gray-900 font-medium">{entry.planterCode}</td>
+                            <td className="p-3 text-gray-900">{entry.planterName}</td>
+                            <td className="p-3 text-gray-700">{entry.location}</td>
+                            <td className="p-3 text-gray-900 font-medium">{entry.truckPlateNo}</td>
+                            <td className="p-3 text-gray-700">{entry.grossWeight.toFixed(3)}</td>
+                            <td className="p-3 text-gray-700">{entry.tareWeight.toFixed(3)}</td>
+                            <td className="p-3 text-gray-900 font-medium">{entry.grossCane.toFixed(3)}</td>
+                            <td className="p-3 text-gray-700">{entry.trashPercent}%</td>
+                            <td className="p-3 text-gray-700">{entry.tonsTrash.toFixed(3)}</td>
+                            <td className="p-3 text-gray-900 font-medium">{entry.netWeight.toFixed(3)}</td>
+                            <td className="p-3 text-gray-500">{entry.temp || "-"}</td>
+                            <td className="p-3 text-gray-700">{entry.polRdg.toFixed(1)}</td>
+                            <td className="p-3 text-gray-700">{entry.brix.toFixed(1)}</td>
+                            <td className="p-3 text-gray-700">{entry.corBrix.toFixed(1)}</td>
+                            <td className="p-3 text-gray-700">{entry.polPercent.toFixed(1)}%</td>
+                            <td className="p-3 text-gray-700">{entry.appPty.toFixed(1)}</td>
+                            <td className="p-3 text-gray-700">{entry.lkgTc.toFixed(2)}</td>
+                            <td className="p-3 text-green-700 font-medium">{entry.calculatedSugar.toFixed(2)}</td>
+                            <td className="p-3 text-gray-700">{entry.tonsBrix.toFixed(3)}</td>
+                            <td className="p-3 text-gray-700">{entry.tonsPol.toFixed(3)}</td>
+                            <td className="p-3 text-gray-700">{entry.tonsMol.toFixed(3)}</td>
+                            <td className="p-3">
+                              <Badge variant={entry.caneType === "FC" ? "default" : "secondary"} className="text-xs">
+                                {entry.caneType}
+                              </Badge>
+                            </td>
+                            <td className="p-3 text-gray-600 text-xs">{entry.dateTime}</td>
+                            <td className="p-3">
+                              <Badge 
+                                variant={
+                                  entry.status === "completed" ? "default" : 
+                                  entry.status === "processing" ? "secondary" : "outline"
+                                }
+                                className={
+                                  entry.status === "completed" ? "bg-green-100 text-green-800" :
+                                  entry.status === "processing" ? "bg-blue-100 text-blue-800" :
+                                  "bg-yellow-100 text-yellow-800"
+                                }
+                              >
+                                {entry.status}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards View */}
+                  <div className="md:hidden space-y-3 p-3">
+                    {detailedProductionData.map((entry, index) => (
+                      <Card key={index} className="border-green-200 hover:bg-green-50/30 transition-colors">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 space-y-3">
+                              <div className="flex items-center gap-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
+                                  <Wheat className="h-4 w-4 text-green-600" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-gray-800">{entry.planterName}</h3>
+                                  <p className="text-sm text-gray-600">{entry.planterCode}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                  <span className="text-green-600 font-medium">Location:</span>
+                                  <p className="text-gray-700">{entry.location}</p>
+                                </div>
+                                <div>
+                                  <span className="text-green-600 font-medium">Truck:</span>
+                                  <p className="text-gray-700">{entry.truckPlateNo}</p>
+                                </div>
+                                <div>
+                                  <span className="text-green-600 font-medium">Net Weight:</span>
+                                  <p className="text-gray-700 font-medium">{entry.netWeight.toFixed(3)} tons</p>
+                                </div>
+                                <div>
+                                  <span className="text-green-600 font-medium">Sugar:</span>
+                                  <p className="text-green-700 font-medium">{entry.calculatedSugar.toFixed(2)} tons</p>
+                                </div>
+                                <div>
+                                  <span className="text-green-600 font-medium">Cane Type:</span>
+                                  <div className="mt-1">
+                                    <Badge variant={entry.caneType === "FC" ? "default" : "secondary"} className="text-xs">
+                                      {entry.caneType}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <div>
+                                  <span className="text-green-600 font-medium">Status:</span>
+                                  <div className="mt-1">
+                                    <Badge 
+                                      variant={
+                                        entry.status === "completed" ? "default" : 
+                                        entry.status === "processing" ? "secondary" : "outline"
+                                      }
+                                      className={
+                                        entry.status === "completed" ? "bg-green-100 text-green-800" :
+                                        entry.status === "processing" ? "bg-blue-100 text-blue-800" :
+                                        "bg-yellow-100 text-yellow-800"
+                                      }
+                                    >
+                                      {entry.status}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="text-xs text-gray-500">
+                                {entry.dateTime}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>

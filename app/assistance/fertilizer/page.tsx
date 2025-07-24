@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Filter, Plus, Search } from "lucide-react"
+import { Filter, Plus, Search, Sprout } from "lucide-react"
 
 export default function FertilizerAssistancePage() {
   const programs = [
@@ -170,51 +170,120 @@ export default function FertilizerAssistancePage() {
                   </div>
 
                   <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>ID</TableHead>
-                          <TableHead>Program Name</TableHead>
-                          <TableHead className="hidden md:table-cell">Type</TableHead>
-                          <TableHead className="hidden md:table-cell">Allocation</TableHead>
-                          <TableHead>Progress</TableHead>
-                          <TableHead className="hidden md:table-cell">Beneficiaries</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {programs.map((program) => (
-                          <TableRow key={program.id}>
-                            <TableCell className="font-medium">{program.id}</TableCell>
-                            <TableCell>{program.name}</TableCell>
-                            <TableCell className="hidden md:table-cell">{program.type}</TableCell>
-                            <TableCell className="hidden md:table-cell">{program.allocation}</TableCell>
-                            <TableCell>
-                              <div className="flex w-full max-w-[100px] items-center gap-2">
-                                <Progress
-                                  value={
-                                    (Number.parseInt(program.distributed) / Number.parseInt(program.allocation)) * 100
-                                  }
-                                  className="h-2"
-                                />
-                                <span className="text-xs text-muted-foreground">
-                                  {Math.round(
-                                    (Number.parseInt(program.distributed) / Number.parseInt(program.allocation)) * 100,
-                                  )}
-                                  %
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell">{program.beneficiaries}</TableCell>
-                            <TableCell>
-                              <Badge variant={program.status === "Active" ? "default" : "secondary"}>
-                                {program.status}
-                              </Badge>
-                            </TableCell>
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>ID</TableHead>
+                            <TableHead>Program Name</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Allocation</TableHead>
+                            <TableHead>Progress</TableHead>
+                            <TableHead>Beneficiaries</TableHead>
+                            <TableHead>Status</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {programs.map((program) => (
+                            <TableRow key={program.id}>
+                              <TableCell className="font-medium">{program.id}</TableCell>
+                              <TableCell>{program.name}</TableCell>
+                              <TableCell>{program.type}</TableCell>
+                              <TableCell>{program.allocation}</TableCell>
+                              <TableCell>
+                                <div className="flex w-full max-w-[100px] items-center gap-2">
+                                  <Progress
+                                    value={
+                                      (Number.parseInt(program.distributed) / Number.parseInt(program.allocation)) * 100
+                                    }
+                                    className="h-2"
+                                  />
+                                  <span className="text-xs text-muted-foreground">
+                                    {Math.round(
+                                      (Number.parseInt(program.distributed) / Number.parseInt(program.allocation)) * 100,
+                                    )}
+                                    %
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell>{program.beneficiaries}</TableCell>
+                              <TableCell>
+                                <Badge variant={program.status === "Active" ? "default" : "secondary"}>
+                                  {program.status}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Mobile Cards View */}
+                    <div className="md:hidden space-y-3 p-3">
+                      {programs.map((program) => (
+                        <Card key={program.id} className="border-green-200 hover:bg-green-50/30 transition-colors">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1 space-y-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
+                                    <Sprout className="h-4 w-4 text-green-600" />
+                                  </div>
+                                  <div>
+                                    <h3 className="font-semibold text-gray-800">{program.name}</h3>
+                                    <p className="text-sm text-gray-600">{program.id}</p>
+                                  </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                  <div>
+                                    <span className="text-green-600 font-medium">Type:</span>
+                                    <p className="text-gray-700">{program.type}</p>
+                                  </div>
+                                  <div>
+                                    <span className="text-green-600 font-medium">Allocation:</span>
+                                    <p className="text-gray-700">{program.allocation}</p>
+                                  </div>
+                                  <div>
+                                    <span className="text-green-600 font-medium">Beneficiaries:</span>
+                                    <p className="text-gray-700">{program.beneficiaries}</p>
+                                  </div>
+                                  <div>
+                                    <span className="text-green-600 font-medium">Status:</span>
+                                    <div className="mt-1">
+                                      <Badge variant={program.status === "Active" ? "default" : "secondary"}>
+                                        {program.status}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-green-600 font-medium">Progress:</span>
+                                    <span className="text-gray-600">
+                                      {Math.round(
+                                        (Number.parseInt(program.distributed) / Number.parseInt(program.allocation)) * 100,
+                                      )}%
+                                    </span>
+                                  </div>
+                                  <Progress
+                                    value={
+                                      (Number.parseInt(program.distributed) / Number.parseInt(program.allocation)) * 100
+                                    }
+                                    className="h-2"
+                                  />
+                                  <p className="text-xs text-gray-500">
+                                    {program.distributed} of {program.allocation} distributed
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -229,34 +298,83 @@ export default function FertilizerAssistancePage() {
               </CardHeader>
               <CardContent>
                 <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Program</TableHead>
-                        <TableHead>Recipient</TableHead>
-                        <TableHead className="hidden md:table-cell">Location</TableHead>
-                        <TableHead className="hidden md:table-cell">Quantity</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {recentDistributions.map((distribution, index) => (
-                        <TableRow key={index}>
-                          <TableCell>{distribution.date}</TableCell>
-                          <TableCell className="max-w-[150px] truncate">{distribution.program}</TableCell>
-                          <TableCell>{distribution.recipient}</TableCell>
-                          <TableCell className="hidden md:table-cell">{distribution.location}</TableCell>
-                          <TableCell className="hidden md:table-cell">{distribution.quantity}</TableCell>
-                          <TableCell>
-                            <Badge variant={distribution.status === "Delivered" ? "default" : "outline"}>
-                              {distribution.status}
-                            </Badge>
-                          </TableCell>
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Program</TableHead>
+                          <TableHead>Recipient</TableHead>
+                          <TableHead>Location</TableHead>
+                          <TableHead>Quantity</TableHead>
+                          <TableHead>Status</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {recentDistributions.map((distribution, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{distribution.date}</TableCell>
+                            <TableCell className="max-w-[150px] truncate">{distribution.program}</TableCell>
+                            <TableCell>{distribution.recipient}</TableCell>
+                            <TableCell>{distribution.location}</TableCell>
+                            <TableCell>{distribution.quantity}</TableCell>
+                            <TableCell>
+                              <Badge variant={distribution.status === "Delivered" ? "default" : "outline"}>
+                                {distribution.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile Cards View */}
+                  <div className="md:hidden space-y-3 p-3">
+                    {recentDistributions.map((distribution, index) => (
+                      <Card key={index} className="border-green-200 hover:bg-green-50/30 transition-colors">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 space-y-3">
+                              <div className="flex items-center gap-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
+                                  <Sprout className="h-4 w-4 text-green-600" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-gray-800">{distribution.recipient}</h3>
+                                  <p className="text-sm text-gray-600">{distribution.program}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                  <span className="text-green-600 font-medium">Date:</span>
+                                  <p className="text-gray-700">{distribution.date}</p>
+                                </div>
+                                <div>
+                                  <span className="text-green-600 font-medium">Quantity:</span>
+                                  <p className="text-gray-700">{distribution.quantity}</p>
+                                </div>
+                                <div>
+                                  <span className="text-green-600 font-medium">Location:</span>
+                                  <p className="text-gray-700">{distribution.location}</p>
+                                </div>
+                                <div>
+                                  <span className="text-green-600 font-medium">Status:</span>
+                                  <div className="mt-1">
+                                    <Badge variant={distribution.status === "Delivered" ? "default" : "outline"}>
+                                      {distribution.status}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="mt-4 flex items-center justify-end space-x-2">

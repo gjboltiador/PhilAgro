@@ -205,7 +205,7 @@ export default function TruckRentals() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-1">
@@ -213,12 +213,12 @@ export default function TruckRentals() {
             <p className="text-sm sm:text-base text-orange-600">Manage truck fleet, bookings, and operations</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="border-orange-200 text-gray-700 hover:bg-orange-50 rounded-lg px-4 py-2 text-xs sm:text-sm">
+            <Button variant="outline" className="border-orange-200 text-gray-700 hover:bg-orange-50 rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm">
               <Calendar className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">View Calendar</span>
               <span className="sm:hidden">Calendar</span>
             </Button>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-4 py-2 text-xs sm:text-sm">
+            <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm">
               <Plus className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Add Truck</span>
               <span className="sm:hidden">Add</span>
@@ -227,7 +227,7 @@ export default function TruckRentals() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4 mb-8">
+        <div className="grid gap-2 sm:gap-4 grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">
           <Card className="bg-amber-50 border-amber-200 rounded-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs sm:text-sm font-medium text-orange-800">Total Trucks</CardTitle>
@@ -288,7 +288,7 @@ export default function TruckRentals() {
         </div>
 
         {/* Tabs Navigation */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-4 sm:mb-6">
           <TabsList className="grid w-full grid-cols-5 border border-orange-200 p-1">
             <TabsTrigger 
               value="trucks" 
@@ -353,94 +353,256 @@ export default function TruckRentals() {
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200 bg-amber-50">
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Truck ID</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Plate Number</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Type/Model</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Capacity</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Driver</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">OR/CR Expiry</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4 font-medium text-gray-800">TRK-001</td>
-                        <td className="py-3 px-4 text-gray-700">ABC-1234</td>
-                        <td className="py-3 px-4 text-gray-700">
-                          <div>10-Wheeler</div>
-                          <div className="text-sm text-gray-600">Isuzu ELF</div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">5 tons</td>
-                        <td className="py-3 px-4 text-gray-700">Juan Santos</td>
-                        <td className="py-3 px-4">
-                          <Badge className="bg-green-500 text-white px-4 py-1.5 rounded-full text-sm font-medium">
-                            Available
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-600">
-                          <div>OR: Dec 15, 2024</div>
-                          <div>CR: Mar 20, 2025</div>
-                        </td>
-                        <td className="py-3 px-4">
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-200 bg-amber-50">
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Truck ID</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Plate Number</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Type/Model</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Capacity</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Driver</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">OR/CR Expiry</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4 font-medium text-gray-800">TRK-001</td>
+                          <td className="py-3 px-4 text-gray-700">ABC-1234</td>
+                          <td className="py-3 px-4 text-gray-700">
+                            <div>10-Wheeler</div>
+                            <div className="text-sm text-gray-600">Isuzu ELF</div>
+                          </td>
+                          <td className="py-3 px-4 text-gray-700">5 tons</td>
+                          <td className="py-3 px-4 text-gray-700">Juan Santos</td>
+                          <td className="py-3 px-4">
+                            <Badge className="bg-green-500 text-white px-4 py-1.5 rounded-full text-sm font-medium">
+                              Available
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-600">
+                            <div>OR: Dec 15, 2024</div>
+                            <div>CR: Mar 20, 2025</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                        <tr className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4 font-medium text-gray-800">TRK-002</td>
+                          <td className="py-3 px-4 text-gray-700">DEF-5678</td>
+                          <td className="py-3 px-4 text-gray-700">
+                            <div>6-Wheeler</div>
+                            <div className="text-sm text-gray-600">Mitsubishi Fuso Canter</div>
+                          </td>
+                          <td className="py-3 px-4 text-gray-700">3 tons</td>
+                          <td className="py-3 px-4 text-gray-700">Pedro Cruz</td>
+                          <td className="py-3 px-4">
+                            <Badge className="bg-amber-200 text-amber-800 px-4 py-1.5 rounded-full text-sm font-medium">
+                              On Route
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-600">
+                            <div>OR: Nov 30, 2024</div>
+                            <div>CR: Jan 15, 2025</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                        <tr className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4 font-medium text-gray-800">TRK-003</td>
+                          <td className="py-3 px-4 text-gray-700">GHI-9012</td>
+                          <td className="py-3 px-4 text-gray-700">
+                            <div>4-Wheeler</div>
+                            <div className="text-sm text-gray-600">Toyota Dyna</div>
+                          </td>
+                          <td className="py-3 px-4 text-gray-700">2 tons</td>
+                          <td className="py-3 px-4 text-gray-700">Maria Lopez</td>
+                          <td className="py-3 px-4">
+                            <Badge className="bg-red-500 text-white px-4 py-1.5 rounded-full text-sm font-medium">
+                              Maintenance
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-600">
+                            <div>OR: Oct 10, 2024</div>
+                            <div>CR: Feb 28, 2025</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards View */}
+                  <div className="md:hidden space-y-3">
+                    {/* Truck Card 1 */}
+                    <Card className="border-amber-200 hover:bg-amber-50/30 transition-colors">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100">
+                                <Truck className="h-4 w-4 text-amber-600" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-800">TRK-001</h3>
+                                <p className="text-sm text-gray-600">ABC-1234</p>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <span className="text-amber-600 font-medium">Type:</span>
+                                <p className="text-gray-700">10-Wheeler</p>
+                                <p className="text-xs text-gray-500">Isuzu ELF</p>
+                              </div>
+                              <div>
+                                <span className="text-amber-600 font-medium">Capacity:</span>
+                                <p className="text-gray-700">5 tons</p>
+                              </div>
+                              <div>
+                                <span className="text-amber-600 font-medium">Driver:</span>
+                                <p className="text-gray-700">Juan Santos</p>
+                              </div>
+                              <div>
+                                <span className="text-amber-600 font-medium">Status:</span>
+                                <div className="mt-1">
+                                  <Badge className="bg-green-500 text-white px-2 py-1 rounded-full text-xs">
+                                    Available
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="text-xs text-gray-600 space-y-1">
+                              <div>OR: Dec 15, 2024</div>
+                              <div>CR: Mar 20, 2025</div>
+                            </div>
+                          </div>
+                          
                           <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
                             <MoreVertical className="h-4 w-4" />
                           </Button>
-                        </td>
-                      </tr>
-                      <tr className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4 font-medium text-gray-800">TRK-002</td>
-                        <td className="py-3 px-4 text-gray-700">DEF-5678</td>
-                        <td className="py-3 px-4 text-gray-700">
-                          <div>6-Wheeler</div>
-                          <div className="text-sm text-gray-600">Mitsubishi Fuso Canter</div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">3 tons</td>
-                        <td className="py-3 px-4 text-gray-700">Pedro Cruz</td>
-                        <td className="py-3 px-4">
-                          <Badge className="bg-amber-200 text-amber-800 px-4 py-1.5 rounded-full text-sm font-medium">
-                            On Route
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-600">
-                          <div>OR: Nov 30, 2024</div>
-                          <div>CR: Jan 15, 2025</div>
-                        </td>
-                        <td className="py-3 px-4">
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Truck Card 2 */}
+                    <Card className="border-amber-200 hover:bg-amber-50/30 transition-colors">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100">
+                                <Truck className="h-4 w-4 text-amber-600" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-800">TRK-002</h3>
+                                <p className="text-sm text-gray-600">DEF-5678</p>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <span className="text-amber-600 font-medium">Type:</span>
+                                <p className="text-gray-700">6-Wheeler</p>
+                                <p className="text-xs text-gray-500">Mitsubishi Fuso Canter</p>
+                              </div>
+                              <div>
+                                <span className="text-amber-600 font-medium">Capacity:</span>
+                                <p className="text-gray-700">3 tons</p>
+                              </div>
+                              <div>
+                                <span className="text-amber-600 font-medium">Driver:</span>
+                                <p className="text-gray-700">Pedro Cruz</p>
+                              </div>
+                              <div>
+                                <span className="text-amber-600 font-medium">Status:</span>
+                                <div className="mt-1">
+                                  <Badge className="bg-amber-200 text-amber-800 px-2 py-1 rounded-full text-xs">
+                                    On Route
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="text-xs text-gray-600 space-y-1">
+                              <div>OR: Nov 30, 2024</div>
+                              <div>CR: Jan 15, 2025</div>
+                            </div>
+                          </div>
+                          
                           <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
                             <MoreVertical className="h-4 w-4" />
                           </Button>
-                        </td>
-                      </tr>
-                      <tr className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4 font-medium text-gray-800">TRK-003</td>
-                        <td className="py-3 px-4 text-gray-700">GHI-9012</td>
-                        <td className="py-3 px-4 text-gray-700">
-                          <div>4-Wheeler</div>
-                          <div className="text-sm text-gray-600">Toyota Dyna</div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">2 tons</td>
-                        <td className="py-3 px-4 text-gray-700">Maria Lopez</td>
-                        <td className="py-3 px-4">
-                          <Badge className="bg-red-500 text-white px-4 py-1.5 rounded-full text-sm font-medium">
-                            Maintenance
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-600">
-                          <div>OR: Oct 10, 2024</div>
-                          <div>CR: Feb 28, 2025</div>
-                        </td>
-                        <td className="py-3 px-4">
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Truck Card 3 */}
+                    <Card className="border-amber-200 hover:bg-amber-50/30 transition-colors">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100">
+                                <Truck className="h-4 w-4 text-amber-600" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-800">TRK-003</h3>
+                                <p className="text-sm text-gray-600">GHI-9012</p>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <span className="text-amber-600 font-medium">Type:</span>
+                                <p className="text-gray-700">4-Wheeler</p>
+                                <p className="text-xs text-gray-500">Toyota Dyna</p>
+                              </div>
+                              <div>
+                                <span className="text-amber-600 font-medium">Capacity:</span>
+                                <p className="text-gray-700">2 tons</p>
+                              </div>
+                              <div>
+                                <span className="text-amber-600 font-medium">Driver:</span>
+                                <p className="text-gray-700">Maria Lopez</p>
+                              </div>
+                              <div>
+                                <span className="text-amber-600 font-medium">Status:</span>
+                                <div className="mt-1">
+                                  <Badge className="bg-red-500 text-white px-2 py-1 rounded-full text-xs">
+                                    Maintenance
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="text-xs text-gray-600 space-y-1">
+                              <div>OR: Oct 10, 2024</div>
+                              <div>CR: Feb 28, 2025</div>
+                            </div>
+                          </div>
+                          
                           <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
                             <MoreVertical className="h-4 w-4" />
                           </Button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               </CardContent>
             </Card>

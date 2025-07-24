@@ -37,6 +37,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [showSearchResults, setShowSearchResults] = useState(false)
 
+  // Debug logging
+  console.log('Sidebar state:', sidebarOpen)
+
   // Function to get active route display
   const getActiveRouteDisplay = () => {
     if (pathname === '/') return 'Overview'
@@ -190,7 +193,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="dashboard-wrapper min-h-screen flex bg-gradient-to-br from-farm-green-50 via-background to-farm-earth-50">
-      {/* Mobile Overlay */}
+      {/* Mobile Overlay - Lower z-index than sidebar */}
       {sidebarOpen && (
         <div 
           className="fixed inset-0 z-40 bg-black/50 lg:hidden" 
@@ -198,20 +201,102 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         />
       )}
 
-      {/* Dashboard Sidebar - Mobile First */}
-      <aside
-        className={cn(
-          "dashboard-sidebar bg-gradient-to-b from-farm-green-100 to-farm-green-200 border-r border-farm-green-200",
-          "fixed lg:relative top-0 left-0 h-full w-80 lg:w-72 transform transition-transform duration-300 ease-in-out",
-          "flex flex-col",
-          "z-60 lg:z-auto shadow-2xl lg:shadow-none", // Higher z-index for mobile, normal for desktop
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-        )}
-        style={{ 
-          zIndex: 60,
-          backgroundColor: 'rgb(220 252 231)', // Darker background
-        }}
-      >
+      {/* Mobile Sidebar - Higher z-index than overlay */}
+      {sidebarOpen && (
+        <aside className="fixed top-0 left-0 h-full w-80 bg-gradient-to-b from-farm-green-100 to-farm-green-200 border-r border-farm-green-200 z-50 flex flex-col shadow-2xl lg:hidden">
+          {/* SIDEBAR HEADER - Logo and Branding */}
+          <header className="flex-shrink-0 h-16 flex items-center justify-between px-4 lg:px-6 border-b border-farm-green-200 bg-farm-green-300 shadow-sm">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-farm-green-500 to-farm-green-600 shadow-lg">
+                <Wheat className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-lg font-bold text-farm-green-700">Phil Agro</span>
+                <span className="text-xs text-farm-green-700">Agriculture Management</span>
+              </div>
+            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden hover:bg-farm-green-100"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </header>
+
+          {/* SCROLLABLE NAVIGATION - Menu Items */}
+          <nav className="flex-1 overflow-y-auto px-4 pt-4 space-y-2 bg-gradient-to-b from-farm-green-100 to-farm-green-200">
+            {routes.map((route) => (
+              <div key={route.title}>
+                {route.submenu ? (
+                  <div className="space-y-1">
+                    {/* Submenu Parent */}
+                    <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-farm-green-700 rounded-lg">
+                      <route.icon className="h-5 w-5" />
+                      <span>{route.title}</span>
+                    </div>
+                    {/* Submenu Items */}
+                    <div className="ml-6 space-y-1">
+                      {route.submenu.map((submenu) => {
+                        const isActive = pathname === submenu.href || pathname.startsWith(submenu.href + '/')
+                        return (
+                          <Link
+                            key={submenu.title}
+                            href={submenu.href}
+                            onClick={() => setSidebarOpen(false)}
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200 ease-in-out relative",
+                              "hover:bg-farm-green-200 hover:text-farm-green-900 hover:shadow-md hover:scale-[1.02] hover:border hover:border-farm-green-300",
+                              "active:scale-[0.98] active:bg-farm-green-300",
+                              isActive
+                                ? "bg-farm-green-500 text-white font-medium shadow-md border border-white"
+                                : "text-farm-green-600",
+                            )}
+                          >
+                            <ChevronRight className={cn(
+                              "h-4 w-4 transition-colors",
+                              isActive ? "text-white" : "text-farm-green-500"
+                            )} />
+                            <span>{submenu.title}</span>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  (() => {
+                    const isActive = pathname === route.href || pathname.startsWith(route.href + '/')
+                    return (
+                      <Link
+                        href={route.href}
+                        onClick={() => setSidebarOpen(false)}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200 ease-in-out relative",
+                          "hover:bg-farm-green-200 hover:text-farm-green-900 hover:shadow-md hover:scale-[1.02] hover:border hover:border-farm-green-300",
+                          "active:scale-[0.98] active:bg-farm-green-300",
+                          isActive
+                            ? "bg-farm-green-500 text-white font-medium shadow-md border border-white"
+                            : "text-farm-green-600",
+                        )}
+                      >
+                        <route.icon className={cn(
+                          "h-5 w-5 transition-colors",
+                          isActive ? "text-white" : "text-farm-green-500"
+                        )} />
+                        <span>{route.title}</span>
+                      </Link>
+                    )
+                  })()
+                )}
+              </div>
+            ))}
+          </nav>
+        </aside>
+      )}
+
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex lg:relative lg:top-0 lg:left-0 lg:h-full lg:w-72 lg:flex-col lg:bg-gradient-to-b lg:from-farm-green-100 lg:to-farm-green-200 lg:border-r lg:border-farm-green-200 lg:shadow-none">
         {/* SIDEBAR HEADER - Logo and Branding */}
         <header className="flex-shrink-0 h-16 flex items-center justify-between px-4 lg:px-6 border-b border-farm-green-200 bg-farm-green-300 shadow-sm">
           <Link href="/" className="flex items-center gap-3">
@@ -223,14 +308,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <span className="text-xs text-farm-green-700">Agriculture Management</span>
             </div>
           </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden hover:bg-farm-green-100"
-          >
-            <X className="h-5 w-5" />
-          </Button>
         </header>
 
         {/* SCROLLABLE NAVIGATION - Menu Items */}
@@ -252,7 +329,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         <Link
                           key={submenu.title}
                           href={submenu.href}
-                          onClick={() => setSidebarOpen(false)}
                           className={cn(
                             "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200 ease-in-out relative",
                             "hover:bg-farm-green-200 hover:text-farm-green-900 hover:shadow-md hover:scale-[1.02] hover:border hover:border-farm-green-300",
@@ -278,7 +354,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   return (
                     <Link
                       href={route.href}
-                      onClick={() => setSidebarOpen(false)}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200 ease-in-out relative",
                         "hover:bg-farm-green-200 hover:text-farm-green-900 hover:shadow-md hover:scale-[1.02] hover:border hover:border-farm-green-300",
@@ -302,10 +377,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </nav>
       </aside>
 
-      {/* Main Content Area */}
-      <div className="dashboard-main-content flex flex-col flex-1 min-w-0">
+      {/* Main Content Area - Lower z-index than sidebar */}
+      <div className="dashboard-main-content flex flex-col flex-1 min-w-0 relative z-10">
         {/* Dashboard Header */}
-        <header className="dashboard-header border-b border-farm-green-200 bg-white/80 backdrop-blur-sm shadow-sm">
+        <header className="dashboard-header border-b border-farm-green-200 bg-white/80 backdrop-blur-sm shadow-sm relative z-20">
           <div className="flex h-16 items-center justify-between px-4 lg:px-6">
             {/* Left side - Mobile Menu Button and Title */}
             <div className="flex items-center gap-4">
@@ -313,7 +388,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 variant="ghost"
                 size="icon"
                 className="lg:hidden border-farm-green-300 hover:bg-farm-green-100"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
+                onClick={() => {
+                  console.log('Hamburger clicked, current state:', sidebarOpen)
+                  setSidebarOpen(!sidebarOpen)
+                  console.log('New state will be:', !sidebarOpen)
+                }}
               >
                 <Menu className="h-5 w-5" />
               </Button>
@@ -386,7 +465,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </main>
 
         {/* Dashboard Footer */}
-        <footer className="dashboard-footer border-t border-farm-green-200 bg-white/80 backdrop-blur-sm">
+        <footer className="dashboard-footer border-t border-farm-green-200 bg-white/80 backdrop-blur-sm relative z-20">
           <div className="flex h-12 items-center justify-between px-4 lg:px-6 text-sm text-farm-green-600">
             <div className="flex items-center gap-2 lg:gap-4">
               <span className="text-xs lg:text-sm">© 2024 Phil Agro-Industrial Technologist Agriculture</span>

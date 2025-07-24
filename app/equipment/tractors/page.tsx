@@ -196,7 +196,7 @@ export default function TractorRentals() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-1">
@@ -342,54 +342,122 @@ export default function TractorRentals() {
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200 bg-green-50">
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Tractor ID</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Model/Type</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Implements</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Operator</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Area Worked</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Rate/ha</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tractors.map((tractor) => (
-                        <tr key={tractor.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 px-4 font-medium text-gray-800">{tractor.id}</td>
-                          <td className="py-3 px-4 text-gray-700">
-                            <div>{tractor.model}</div>
-                            <div className="text-sm text-gray-600">{tractor.type} - {tractor.horsepower} HP</div>
-                          </td>
-                          <td className="py-3 px-4 text-gray-700">
-                            <div className="flex flex-wrap gap-1">
-                              {tractor.implements.slice(0, 2).map((impl, index) => (
-                                <Badge key={index} variant="outline" className="text-xs">
-                                  {impl}
-                                </Badge>
-                              ))}
-                              {tractor.implements.length > 2 && (
-                                <Badge variant="outline" className="text-xs">+{tractor.implements.length - 2}</Badge>
-                              )}
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-200 bg-green-50">
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Tractor ID</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Model/Type</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Implements</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Operator</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Area Worked</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Rate/ha</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tractors.map((tractor) => (
+                          <tr key={tractor.id} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="py-3 px-4 font-medium text-gray-800">{tractor.id}</td>
+                            <td className="py-3 px-4 text-gray-700">
+                              <div>{tractor.model}</div>
+                              <div className="text-sm text-gray-600">{tractor.type} - {tractor.horsepower} HP</div>
+                            </td>
+                            <td className="py-3 px-4 text-gray-700">
+                              <div className="flex flex-wrap gap-1">
+                                {tractor.implements.slice(0, 2).map((impl, index) => (
+                                  <Badge key={index} variant="outline" className="text-xs">
+                                    {impl}
+                                  </Badge>
+                                ))}
+                                {tractor.implements.length > 2 && (
+                                  <Badge variant="outline" className="text-xs">+{tractor.implements.length - 2}</Badge>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-gray-700">{tractor.operator}</td>
+                            <td className="py-3 px-4">
+                              {getStatusBadge(tractor.status)}
+                            </td>
+                            <td className="py-3 px-4 text-gray-700">{tractor.areaWorked} ha</td>
+                            <td className="py-3 px-4 text-gray-700">₱{tractor.ratePerHa.toLocaleString()}</td>
+                            <td className="py-3 px-4">
+                              <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards View */}
+                  <div className="md:hidden space-y-3 p-3">
+                    {tractors.map((tractor) => (
+                      <Card key={tractor.id} className="border-green-200 hover:bg-green-50/30 transition-colors">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 space-y-3">
+                              <div className="flex items-center gap-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
+                                  <Tractor className="h-4 w-4 text-green-600" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-gray-800">{tractor.id}</h3>
+                                  <p className="text-sm text-gray-600">{tractor.model}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                  <span className="text-green-600 font-medium">Type:</span>
+                                  <p className="text-gray-700">{tractor.type} - {tractor.horsepower} HP</p>
+                                </div>
+                                <div>
+                                  <span className="text-green-600 font-medium">Operator:</span>
+                                  <p className="text-gray-700">{tractor.operator}</p>
+                                </div>
+                                <div>
+                                  <span className="text-green-600 font-medium">Area Worked:</span>
+                                  <p className="text-gray-700">{tractor.areaWorked} ha</p>
+                                </div>
+                                <div>
+                                  <span className="text-green-600 font-medium">Rate/ha:</span>
+                                  <p className="text-gray-700">₱{tractor.ratePerHa.toLocaleString()}</p>
+                                </div>
+                                <div>
+                                  <span className="text-green-600 font-medium">Status:</span>
+                                  <div className="mt-1">
+                                    {getStatusBadge(tractor.status)}
+                                  </div>
+                                </div>
+                                <div>
+                                  <span className="text-green-600 font-medium">Implements:</span>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {tractor.implements.slice(0, 2).map((impl, index) => (
+                                      <Badge key={index} variant="outline" className="text-xs">
+                                        {impl}
+                                      </Badge>
+                                    ))}
+                                    {tractor.implements.length > 2 && (
+                                      <Badge variant="outline" className="text-xs">+{tractor.implements.length - 2}</Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                          </td>
-                          <td className="py-3 px-4 text-gray-700">{tractor.operator}</td>
-                          <td className="py-3 px-4">
-                            {getStatusBadge(tractor.status)}
-                          </td>
-                          <td className="py-3 px-4 text-gray-700">{tractor.areaWorked} ha</td>
-                          <td className="py-3 px-4 text-gray-700">₱{tractor.ratePerHa.toLocaleString()}</td>
-                          <td className="py-3 px-4">
+                            
                             <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>

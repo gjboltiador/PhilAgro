@@ -518,41 +518,114 @@ export default function PlantersRegistrationPage() {
               </div>
 
               <div className="rounded-md border border-farm-green-200 bg-white/50">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead className="hidden md:table-cell">Location</TableHead>
-                      <TableHead className="hidden md:table-cell">Area</TableHead>
-                      <TableHead className="hidden md:table-cell">Registration Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="w-[50px]"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {planters.map((planter) => (
-                      <TableRow key={planter.id} className="hover:bg-farm-green-50/50">
-                        <TableCell className="font-medium">{planter.id}</TableCell>
-                        <TableCell>{planter.name}</TableCell>
-                        <TableCell className="hidden md:table-cell">{planter.location}</TableCell>
-                        <TableCell className="hidden md:table-cell">{planter.area}</TableCell>
-                        <TableCell className="hidden md:table-cell">{planter.registrationDate}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              planter.status === "Active"
-                                ? "default"
-                                : planter.status === "Pending"
-                                  ? "outline"
-                                  : "secondary"
-                            }
-                            className={planter.status === "Active" ? "bg-farm-green-600 hover:bg-farm-green-700" : ""}
-                          >
-                            {planter.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
+                {/* Desktop Table View */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Area</TableHead>
+                        <TableHead>Registration Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="w-[50px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {planters.map((planter) => (
+                        <TableRow key={planter.id} className="hover:bg-farm-green-50/50">
+                          <TableCell className="font-medium">{planter.id}</TableCell>
+                          <TableCell>{planter.name}</TableCell>
+                          <TableCell>{planter.location}</TableCell>
+                          <TableCell>{planter.area}</TableCell>
+                          <TableCell>{planter.registrationDate}</TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                planter.status === "Active"
+                                  ? "default"
+                                  : planter.status === "Pending"
+                                    ? "outline"
+                                    : "secondary"
+                              }
+                              className={planter.status === "Active" ? "bg-farm-green-600 hover:bg-farm-green-700" : ""}
+                            >
+                              {planter.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">Open menu</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>View Details</DropdownMenuItem>
+                                <DropdownMenuItem>Edit Registration</DropdownMenuItem>
+                                <DropdownMenuItem>Production History</DropdownMenuItem>
+                                <DropdownMenuItem>Assistance Records</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Cards View */}
+                <div className="md:hidden space-y-3 p-3">
+                  {planters.map((planter) => (
+                    <Card key={planter.id} className="border-farm-green-200 hover:bg-farm-green-50/30 transition-colors">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-farm-green-100">
+                                <User className="h-4 w-4 text-farm-green-600" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-farm-green-800">{planter.name}</h3>
+                                <p className="text-sm text-farm-green-600">{planter.id}</p>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <span className="text-farm-green-600 font-medium">Location:</span>
+                                <p className="text-gray-700">{planter.location}</p>
+                              </div>
+                              <div>
+                                <span className="text-farm-green-600 font-medium">Area:</span>
+                                <p className="text-gray-700">{planter.area}</p>
+                              </div>
+                              <div>
+                                <span className="text-farm-green-600 font-medium">Registered:</span>
+                                <p className="text-gray-700">{planter.registrationDate}</p>
+                              </div>
+                              <div>
+                                <span className="text-farm-green-600 font-medium">Status:</span>
+                                <div className="mt-1">
+                                  <Badge
+                                    variant={
+                                      planter.status === "Active"
+                                        ? "default"
+                                        : planter.status === "Pending"
+                                          ? "outline"
+                                          : "secondary"
+                                    }
+                                    className={planter.status === "Active" ? "bg-farm-green-600 hover:bg-farm-green-700" : ""}
+                                  >
+                                    {planter.status}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -567,11 +640,11 @@ export default function PlantersRegistrationPage() {
                               <DropdownMenuItem>Assistance Records</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
 
               <div className="flex items-center justify-end space-x-2">
