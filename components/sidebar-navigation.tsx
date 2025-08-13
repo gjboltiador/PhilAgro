@@ -24,6 +24,7 @@ import {
   Search,
   Truck,
   MessageSquare,
+  Crop,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -38,6 +39,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [showSearchResults, setShowSearchResults] = useState(false)
+  const [isClient, setIsClient] = useState(false)
 
   // Debug logging
   console.log('Sidebar state:', sidebarOpen)
@@ -77,10 +79,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     item.category.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  // Set client flag to prevent hydration issues
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   // Click outside handler for search results
   const searchRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (!isClient) return // Only run on client
+    
     function handleClickOutside(event: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowSearchResults(false)
@@ -91,7 +100,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [])
+  }, [isClient])
 
   const routes = [
     {
@@ -185,6 +194,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       href: "/prices",
       active: false,
     },
+
     {
       title: "Settings",
       href: "/settings",
@@ -411,20 +421,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             {/* Right side - Search and Actions */}
             <div className="flex items-center gap-2">
               {/* Search Bar */}
-              <div className="relative hidden md:block" ref={searchRef}>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="🔍 Search Planters, Haulers, Equipment..."
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value)
-                      setShowSearchResults(e.target.value.length > 0)
-                    }}
-                    onFocus={() => setShowSearchResults(searchQuery.length > 0)}
-                    className="w-64 h-9 px-4 text-sm border border-farm-green-500 rounded-lg bg-white/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-farm-green-300 focus:border-transparent text-farm-green-800 placeholder-farm-green-500"
-                  />
-                </div>
+              {isClient && (
+                <div className="relative hidden md:block" ref={searchRef}>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="🔍 Search Planters, Haulers, Equipment..."
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value)
+                        setShowSearchResults(e.target.value.length > 0)
+                      }}
+                      onFocus={() => setShowSearchResults(searchQuery.length > 0)}
+                      className="w-64 h-9 px-4 text-sm border border-farm-green-500 rounded-lg bg-white/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-farm-green-300 focus:border-transparent text-farm-green-800 placeholder-farm-green-500"
+                    />
+                  </div>
                 
                 {/* Search Results Dropdown */}
                 {showSearchResults && filteredItems.length > 0 && (
@@ -448,7 +459,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     ))}
                   </div>
                 )}
-              </div>
+                </div>
+              )}
 
               <Button variant="ghost" size="icon" className="relative hover:bg-farm-green-600 text-white">
                 <Bell className="h-5 w-5" />

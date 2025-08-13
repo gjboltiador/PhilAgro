@@ -35,9 +35,17 @@ import {
   Scale,
   Percent,
   Edit,
-  Trash2
+  Trash2,
+  Map,
+  Navigation,
+  Square,
+  Upload,
+  Download,
+  Eye,
+  X,
+  AlertTriangle
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 
 // Mock data for farm management
 const farmData = {
@@ -252,10 +260,180 @@ const harvestingData = [
 ]
 
 export default function FarmManagement() {
-  const [activeTab, setActiveTab] = useState("overview")
+  // Initialize map when component mounts
+  useEffect(() => {
+    setMapLoaded(true)
+  }, [])
 
+  // Switch map layers (simplified)
+  const switchMapLayer = (view: string) => {
+    console.log("switchMapLayer called with:", view, "current mapView:", mapView)
+    if (view === 'satellite') {
+      console.log("Setting to satellite view")
+    } else if (view === 'street') {
+      console.log("Setting to street view")
+    } else if (view === 'hybrid') {
+      console.log("Setting to hybrid view")
+    }
+    setMapView(view)
+  }
+
+
+
+  // Zoom functions (no limits) with throttling for smoother experience
+  const [lastZoomTime, setLastZoomTime] = useState(0)
+  
+  const zoomIn = () => {
+    const now = Date.now()
+    if (now - lastZoomTime > 100) { // Throttle to 100ms
+      setZoomLevel(prev => prev + 1)
+      setLastZoomTime(now)
+    }
+  }
+
+  const zoomOut = () => {
+    const now = Date.now()
+    if (now - lastZoomTime > 100) { // Throttle to 100ms
+      setZoomLevel(prev => prev - 1)
+      setLastZoomTime(now)
+    }
+  }
+  const [activeTab, setActiveTab] = useState("overview")
   const [showAddBlock, setShowAddBlock] = useState(false)
   const [showAddPlanting, setShowAddPlanting] = useState(false)
+  
+  // Map and KMZ related states - Force satellite as default
+  const [isClient, setIsClient] = useState(false)
+  const [mapView, setMapView] = useState("satellite") // Force satellite as initial state
+  
+  // Debug: Log the current map view
+  console.log("Current mapView:", mapView)
+  
+  // Set client flag to prevent hydration issues
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+  
+  // AGGRESSIVE satellite view enforcement
+  useEffect(() => {
+    if (!isClient) return // Only run on client
+    
+    console.log("Component mounted, AGGRESSIVELY ensuring satellite view")
+    // Clear any stored map view (client-side only)
+    localStorage.removeItem('mapView')
+    sessionStorage.removeItem('mapView')
+    
+    // Force satellite view immediately
+    setMapView('satellite')
+    
+    // Double-check after a short delay
+    setTimeout(() => {
+      console.log("Double-checking mapView:", mapView)
+      if (mapView !== 'satellite') {
+        console.log("Forcing satellite view again")
+        setMapView('satellite')
+      }
+    }, 100)
+    
+    // Triple-check after another delay
+    setTimeout(() => {
+      console.log("Triple-checking mapView:", mapView)
+      if (mapView !== 'satellite') {
+        console.log("Final force to satellite view")
+        setMapView('satellite')
+      }
+    }, 500)
+  }, [isClient])
+  
+  // Debug: Log every mapView change
+  useEffect(() => {
+    console.log("mapView changed to:", mapView, "type:", typeof mapView)
+  }, [mapView])
+  const [showImportDialog, setShowImportDialog] = useState(false)
+  const [importedData, setImportedData] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [mapLoaded, setMapLoaded] = useState(false)
+  const [zoomLevel, setZoomLevel] = useState(12) // Default zoom for 10km diameter view
+  const fileInputRef = useRef(null)
+  const mapRef = useRef(null)
+
+  // Farm area data (empty for now)
+  const farmAreas: any[] = []
+
+  // Convert GPS coordinates to SVG polygon points
+  const convertCoordinatesToSVG = (coordinates: any, mapBounds: any) => {
+    const { minLat, maxLat, minLng, maxLng } = mapBounds
+    const mapWidth = 800 // SVG width
+    const mapHeight = 600 // SVG height
+    
+    return coordinates.map((coord: any) => {
+      const x = ((coord.lng - minLng) / (maxLng - minLng)) * mapWidth
+      const y = ((maxLat - coord.lat) / (maxLat - minLat)) * mapHeight
+      return `${x},${y}`
+    }).join(' ')
+  }
+
+  // Calculate map bounds based on zoom level and center
+  const getMapBounds = () => {
+    const centerLat = 9.3654
+    const centerLng = 122.8047
+    const zoomFactor = Math.pow(2, 15 - zoomLevel)
+    const latDelta = 0.045 * zoomFactor
+    const lngDelta = 0.045 * zoomFactor
+    
+    return {
+      minLat: centerLat - latDelta,
+      maxLat: centerLat + latDelta,
+      minLng: centerLng - lngDelta,
+      maxLng: centerLng + lngDelta
+    }
+  }
+
+  // KMZ file handling functions
+  const handleFileSelect = (event: any) => {
+    const file = event.target.files[0]
+    if (file && file.name.toLowerCase().endsWith('.kmz')) {
+      handleKMZImport(file)
+    } else {
+      alert('Please select a valid KMZ file')
+    }
+  }
+
+  const handleKMZImport = async (file: any) => {
+    setIsLoading(true)
+    try {
+      // Simulate KMZ processing
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // Mock extracted data from KMZ
+      const mockKMZData = {
+        name: file.name,
+        coordinates: [
+          { lat: 9.3654, lng: 122.8047 },
+          { lat: 9.3658, lng: 122.8052 },
+          { lat: 9.3662, lng: 122.8049 },
+          { lat: 9.3659, lng: 122.8043 }
+        ],
+        area: 2.5, // hectares
+        description: "Tayawan Farm Area from KMZ import",
+        timestamp: new Date().toISOString()
+      }
+      
+      setImportedData(mockKMZData)
+      
+      // Update the map with imported data (simplified)
+      // The imported data will be displayed through the state change
+      // which will update the farm area styling and information
+      
+      setShowImportDialog(false)
+      alert('KMZ file imported successfully!')
+    } catch (error) {
+      console.error('Error importing KMZ:', error)
+      alert('Error importing KMZ file. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -624,11 +802,50 @@ export default function FarmManagement() {
 
               {/* Farm Area Tab */}
               <TabsContent value="farm-area" className="space-y-6 mt-6">
+                {/* Header with Map Controls */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-green-800">Farm Area Management</h2>
+                    <p className="text-green-600 text-sm">Interactive map view with GPS coordinates and farm area management</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowImportDialog(true)}
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      Import Data
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Download className="mr-2 h-4 w-4" />
+                      Export Data
+                    </Button>
+                    <Button size="sm">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Farm Area
+                    </Button>
+                  </div>
+                </div>
+
                 {/* KPI Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <Card className="bg-green-50 border-green-200 rounded-xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-xs sm:text-sm font-medium text-farm-green-800">Total Area</CardTitle>
+                      <CardTitle className="text-xs sm:text-sm font-medium text-farm-green-800">Total Farm Areas</CardTitle>
+                      <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-farm-green-200">
+                        <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-farm-green-700" />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-lg sm:text-2xl font-bold text-farm-green-800">4</div>
+                      <p className="text-xs text-farm-green-600">Active farm areas</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-blue-50 border-blue-200 rounded-xl">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-xs sm:text-sm font-medium text-farm-green-800">Total Hectares</CardTitle>
                       <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-farm-green-200">
                         <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-farm-green-700" />
                       </div>
@@ -639,45 +856,180 @@ export default function FarmManagement() {
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-blue-50 border-blue-200 rounded-xl">
+                  <Card className="bg-yellow-50 border-yellow-200 rounded-xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-xs sm:text-sm font-medium text-farm-green-800">Total Blocks</CardTitle>
+                      <CardTitle className="text-xs sm:text-sm font-medium text-farm-green-800">GPS Coordinates</CardTitle>
                       <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-farm-green-200">
-                        <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-farm-green-700" />
+                        <Navigation className="h-4 w-4 sm:h-5 sm:w-5 text-farm-green-700" />
                       </div>
                     </CardHeader>
                     <CardContent>
                       <div className="text-lg sm:text-2xl font-bold text-farm-green-800">4</div>
-                      <p className="text-xs text-farm-green-600">Farm blocks</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-yellow-50 border-yellow-200 rounded-xl">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-xs sm:text-sm font-medium text-farm-green-800">Planted Area</CardTitle>
-                      <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-farm-green-200">
-                        <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-farm-green-700" />
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-lg sm:text-2xl font-bold text-farm-green-800">3.2 ha</div>
-                      <p className="text-xs text-farm-green-600">Currently planted</p>
+                      <p className="text-xs text-farm-green-600">GPS tracked areas</p>
                     </CardContent>
                   </Card>
 
                   <Card className="bg-purple-50 border-purple-200 rounded-xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-xs sm:text-sm font-medium text-farm-green-800">Available Area</CardTitle>
+                      <CardTitle className="text-xs sm:text-sm font-medium text-farm-green-800">Color Coded</CardTitle>
                       <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-farm-green-200">
-                        <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-farm-green-700" />
+                        <Square className="h-4 w-4 sm:h-5 sm:w-5 text-farm-green-700" />
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-lg sm:text-2xl font-bold text-farm-green-800">2.5 ha</div>
-                      <p className="text-xs text-farm-green-600">Ready for planting</p>
+                      <div className="text-lg sm:text-2xl font-bold text-farm-green-800">4</div>
+                      <p className="text-xs text-farm-green-600">Status colors</p>
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Interactive Map Display */}
+                <Card className="border-green-200 rounded-xl">
+                  <CardHeader>
+                    <CardTitle>Interactive Farm Area Map</CardTitle>
+                    <CardDescription>View and manage farm areas with GPS coordinates and satellite imagery</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div 
+                      className="relative h-[500px] bg-gradient-to-br from-blue-50 to-green-50 rounded-lg border-2 border-gray-200 overflow-hidden"
+                      onWheel={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        
+                        // Smoother zoom based on wheel delta
+                        const zoomSensitivity = 0.5
+                        const delta = e.deltaY * zoomSensitivity
+                        
+                        if (delta < 0) {
+                          zoomIn()
+                        } else if (delta > 0) {
+                          zoomOut()
+                        }
+                      }}
+                    >
+                      {/* Real Map Background */}
+                      <div className="absolute inset-0">
+                        {/* Overlay to hide "View larger map" link */}
+                        <div className="absolute top-0 left-0 w-32 h-12 bg-transparent z-10 pointer-events-none"></div>
+                        
+                        {/* SINGLE MAP IFRAME - Only one renders at a time */}
+                        {isClient ? (() => {
+                          console.log("Rendering map iframe, mapView:", mapView, "type:", typeof mapView)
+                          
+                          // FORCE SATELLITE VIEW - Override any conflicting values
+                          const effectiveMapView = (mapView === 'street') ? 'satellite' : (mapView || 'satellite')
+                          console.log("Effective mapView (after override):", effectiveMapView)
+                          
+                          // SIMPLIFIED APPROACH - Always render satellite
+                          console.log("Rendering SATELLITE iframe (Google Maps)")
+                          return (
+                            <div className="relative w-full h-full">
+                              {/* Overlay to hide "View larger map" link in Google Maps iframe */}
+                              <div className="absolute top-0 left-0 w-32 h-12 bg-transparent z-10 pointer-events-none"></div>
+                              <iframe
+                                src={`https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d${Math.pow(2, 20 - zoomLevel)}!2d122.8047!3d9.3654!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sph!4v1234567890&t=s&maptype=satellite`}
+                                className="w-full h-full border-0 transition-opacity duration-200"
+                                allowFullScreen
+                                loading="lazy"
+                                referrerPolicy="no-referrer-when-downgrade"
+                                key={`satellite-${zoomLevel}`}
+                              />
+                            </div>
+                          )
+                        })() : (
+                          // Loading state while client is initializing
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                            <div className="text-center">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-farm-green-600 mx-auto mb-2"></div>
+                              <p className="text-sm text-gray-600">Loading map...</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Map Controls Overlay */}
+                      <div className="absolute top-4 right-4 flex flex-col gap-2 z-[1000]">
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg opacity-50 cursor-not-allowed"
+                          disabled
+                          title="Street view temporarily disabled"
+                        >
+                          <Navigation className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          className={`${mapView === 'satellite' ? 'bg-blue-100 text-blue-800' : 'bg-white/90 backdrop-blur-sm hover:bg-white'} shadow-lg`}
+                          onClick={() => {
+                            console.log("Satellite button clicked, current mapView:", mapView)
+                            switchMapLayer('satellite')
+                          }}
+                        >
+                          <Map className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          className={`${mapView === 'hybrid' ? 'bg-blue-100 text-blue-800' : 'bg-white/90 backdrop-blur-sm hover:bg-white'} shadow-lg`}
+                          onClick={() => switchMapLayer('hybrid')}
+                        >
+                          <Square className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {/* Zoom Controls */}
+                      <div className="absolute top-4 left-4 flex flex-col gap-1 z-[1000]">
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg w-8 h-8 p-0"
+                          onClick={zoomIn}
+                        >
+                          <span className="text-lg font-bold">+</span>
+                        </Button>
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg w-8 h-8 p-0"
+                          onClick={zoomOut}
+                        >
+                          <span className="text-lg font-bold">−</span>
+                        </Button>
+                        {/* Zoom Level Display */}
+                        <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded shadow-lg text-center">
+                          <div className="text-xs font-medium text-gray-700">{zoomLevel}</div>
+                        </div>
+                      </div>
+
+                      {/* Legend - Hidden when no farm areas */}
+                      {farmAreas.length > 0 && (
+                        <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-gray-200">
+                          <div className="text-sm font-semibold mb-2">Farm Area Status</div>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 rounded bg-green-600/60 border border-green-700"></div>
+                              <span>Planted Fields</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 rounded bg-blue-600/60 border border-blue-700"></div>
+                              <span>Prepared</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 rounded bg-gray-400/30 border border-gray-500"></div>
+                              <span>Residential</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 rounded bg-blue-400/30 border border-blue-500"></div>
+                              <span>Water</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
 
                 {/* Add New Farm Block Form */}
                 <Card className="border-green-200 rounded-xl">
@@ -848,6 +1200,8 @@ export default function FarmManagement() {
                   </CardContent>
                 </Card>
               </TabsContent>
+
+
 
               {/* Land Prep Tab */}
               <TabsContent value="land-prep" className="space-y-6 mt-6">
@@ -2271,7 +2625,160 @@ export default function FarmManagement() {
                 </Card>
               </TabsContent>
             </Tabs>
+
+            {/* Import Data Dialog */}
+            {showImportDialog && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Import Farm Data</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowImportDialog(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="file-upload" className="text-sm font-medium text-gray-700">
+                        Select KMZ File
+                      </Label>
+                      <div className="mt-1">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          id="file-upload"
+                          accept=".kmz"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                        />
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                          <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                          <div className="mt-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => fileInputRef.current?.click()}
+                              disabled={isLoading}
+                            >
+                              {isLoading ? 'Processing...' : 'Choose KMZ File'}
+                            </Button>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2">
+                            Supports KMZ files from Google Earth
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <div className="flex items-start">
+                        <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
+                        <div className="text-sm text-blue-800">
+                          <p className="font-medium">KMZ File Requirements:</p>
+                          <ul className="mt-1 space-y-1 text-xs">
+                            <li>• Must contain polygon or placemark data</li>
+                            <li>• GPS coordinates will be extracted</li>
+                            <li>• Farm area will be calculated automatically</li>
+                            <li>• Maximum file size: 10MB</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-700">
+                          <p className="font-medium">Need a sample KMZ file?</p>
+                          <p className="text-xs text-gray-600 mt-1">
+                            Download our sample farm area KMZ file to test the import functionality.
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            // Create a sample KMZ file content
+                            const sampleKMZContent = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Sample Farm Area - Tayawan</name>
+    <description>Sample KMZ file for farm area import testing</description>
+    <Placemark>
+      <name>Tayawan Farm Area</name>
+      <description>2.5 hectare sugarcane farm in Tayawan, Bayawan City</description>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              122.8047,9.3654,0
+              122.8052,9.3658,0
+              122.8049,9.3662,0
+              122.8043,9.3659,0
+              122.8047,9.3654,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>`
+                            
+                            // Create and download the file
+                            const blob = new Blob([sampleKMZContent], { type: 'application/vnd.google-earth.kml+xml' })
+                            const url = URL.createObjectURL(blob)
+                            const a = document.createElement('a')
+                            a.href = url
+                            a.download = 'sample-farm-area-tayawan.kmz'
+                            document.body.appendChild(a)
+                            a.click()
+                            document.body.removeChild(a)
+                            URL.revokeObjectURL(url)
+                          }}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Sample KMZ
+                        </Button>
+                      </div>
+                    </div>
+
+                    {importedData && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div className="flex items-start">
+                          <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 mr-2" />
+                          <div className="text-sm text-green-800">
+                            <p className="font-medium">Import Successful!</p>
+                            <p className="text-xs mt-1">
+                              Area: {importedData.area} hectares<br/>
+                              Coordinates: {importedData.coordinates.length} points<br/>
+                              File: {importedData.name}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end gap-2 mt-6">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowImportDialog(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => setShowImportDialog(false)}
+                      disabled={!importedData}
+                    >
+                      Import Data
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
       </div>
     </DashboardLayout>
   )
-} 
+}
