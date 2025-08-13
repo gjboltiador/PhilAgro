@@ -203,36 +203,36 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Mobile Sidebar - Higher z-index than overlay */}
       {sidebarOpen && (
-        <aside className="fixed top-0 left-0 h-full w-80 bg-gradient-to-b from-farm-green-100 to-farm-green-200 border-r border-farm-green-200 z-50 flex flex-col shadow-2xl lg:hidden">
+        <aside className="fixed top-0 left-0 h-full w-80 bg-gradient-to-b from-farm-green-700 to-farm-green-800 border-r border-farm-green-600 z-50 flex flex-col shadow-2xl lg:hidden">
           {/* SIDEBAR HEADER - Logo and Branding */}
-          <header className="flex-shrink-0 h-16 flex items-center justify-between px-4 lg:px-6 border-b border-farm-green-200 bg-farm-green-300 shadow-sm">
+          <header className="flex-shrink-0 h-16 flex items-center justify-between px-4 lg:px-6 border-b border-farm-green-600 bg-farm-green-800 shadow-sm">
             <Link href="/" className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-farm-green-500 to-farm-green-600 shadow-lg">
                 <Wheat className="h-6 w-6 text-white" />
               </div>
               <div className="flex flex-col">
-                <span className="text-lg font-bold text-farm-green-700">Phil Agro</span>
-                <span className="text-xs text-farm-green-700">Agriculture Management</span>
+                <span className="text-lg font-bold text-white">Phil Agro</span>
+                <span className="text-xs text-farm-green-100">Agriculture Management</span>
               </div>
             </Link>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden hover:bg-farm-green-100"
+              className="lg:hidden hover:bg-farm-green-600 text-white"
             >
               <X className="h-5 w-5" />
             </Button>
           </header>
 
           {/* SCROLLABLE NAVIGATION - Menu Items */}
-          <nav className="flex-1 overflow-y-auto px-4 pt-4 space-y-2 bg-gradient-to-b from-farm-green-100 to-farm-green-200">
+          <nav className="flex-1 overflow-y-auto px-4 pt-4 space-y-2 bg-gradient-to-b from-farm-green-700 to-farm-green-800">
             {routes.map((route) => (
               <div key={route.title}>
                 {route.submenu ? (
                   <div className="space-y-1">
                     {/* Submenu Parent */}
-                    <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-farm-green-700 rounded-lg">
+                    <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-farm-green-100 rounded-lg">
                       <route.icon className="h-5 w-5" />
                       <span>{route.title}</span>
                     </div>
@@ -247,16 +247,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                             onClick={() => setSidebarOpen(false)}
                             className={cn(
                               "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200 ease-in-out relative",
-                              "hover:bg-farm-green-200 hover:text-farm-green-900 hover:shadow-md hover:scale-[1.02] hover:border hover:border-farm-green-300",
-                              "active:scale-[0.98] active:bg-farm-green-300",
+                              "hover:bg-farm-green-600 hover:text-white hover:shadow-md hover:scale-[1.02] hover:border hover:border-farm-green-500",
+                              "active:scale-[0.98] active:bg-farm-green-700",
                               isActive
                                 ? "bg-farm-green-500 text-white font-medium shadow-md border border-white"
-                                : "text-farm-green-600",
+                                : "text-farm-green-100",
                             )}
                           >
                             <ChevronRight className={cn(
                               "h-4 w-4 transition-colors",
-                              isActive ? "text-white" : "text-farm-green-500"
+                              isActive ? "text-white" : "text-farm-green-300"
                             )} />
                             <span>{submenu.title}</span>
                           </Link>
@@ -273,16 +273,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         onClick={() => setSidebarOpen(false)}
                         className={cn(
                           "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200 ease-in-out relative",
-                          "hover:bg-farm-green-200 hover:text-farm-green-900 hover:shadow-md hover:scale-[1.02] hover:border hover:border-farm-green-300",
-                          "active:scale-[0.98] active:bg-farm-green-300",
+                          "hover:bg-farm-green-600 hover:text-white hover:shadow-md hover:scale-[1.02] hover:border hover:border-farm-green-500",
+                          "active:scale-[0.98] active:bg-farm-green-700",
                           isActive
                             ? "bg-farm-green-500 text-white font-medium shadow-md border border-white"
-                            : "text-farm-green-600",
+                            : "text-farm-green-100",
                         )}
                       >
                         <route.icon className={cn(
                           "h-5 w-5 transition-colors",
-                          isActive ? "text-white" : "text-farm-green-500"
+                          isActive ? "text-white" : "text-farm-green-300"
                         )} />
                         <span>{route.title}</span>
                       </Link>
@@ -296,28 +296,28 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:relative lg:top-0 lg:left-0 lg:h-full lg:w-72 lg:flex-col lg:bg-gradient-to-b lg:from-farm-green-100 lg:to-farm-green-200 lg:border-r lg:border-farm-green-200 lg:shadow-none">
+      <aside className="hidden lg:flex lg:relative lg:top-0 lg:left-0 lg:h-full lg:w-72 lg:flex-col lg:bg-gradient-to-b lg:from-farm-green-700 lg:to-farm-green-800 lg:border-r lg:border-farm-green-600 lg:shadow-none">
         {/* SIDEBAR HEADER - Logo and Branding */}
-        <header className="flex-shrink-0 h-16 flex items-center justify-between px-4 lg:px-6 border-b border-farm-green-200 bg-farm-green-300 shadow-sm">
+        <header className="flex-shrink-0 h-16 flex items-center justify-between px-4 lg:px-6 border-b border-farm-green-600 bg-farm-green-800 shadow-sm">
           <Link href="/" className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-farm-green-500 to-farm-green-600 shadow-lg">
               <Wheat className="h-6 w-6 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-bold text-farm-green-700">Phil Agro</span>
-              <span className="text-xs text-farm-green-700">Agriculture Management</span>
+              <span className="text-lg font-bold text-white">Phil Agro</span>
+              <span className="text-xs text-farm-green-100">Agriculture Management</span>
             </div>
           </Link>
         </header>
 
         {/* SCROLLABLE NAVIGATION - Menu Items */}
-        <nav className="flex-1 overflow-y-auto px-4 pt-4 space-y-2 bg-gradient-to-b from-farm-green-100 to-farm-green-200">
+        <nav className="flex-1 overflow-y-auto px-4 pt-4 space-y-2 bg-gradient-to-b from-farm-green-700 to-farm-green-800">
           {routes.map((route) => (
             <div key={route.title}>
               {route.submenu ? (
                 <div className="space-y-1">
                   {/* Submenu Parent */}
-                  <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-farm-green-700 rounded-lg">
+                  <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-farm-green-100 rounded-lg">
                     <route.icon className="h-5 w-5" />
                     <span>{route.title}</span>
                   </div>
@@ -331,16 +331,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                           href={submenu.href}
                           className={cn(
                             "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200 ease-in-out relative",
-                            "hover:bg-farm-green-200 hover:text-farm-green-900 hover:shadow-md hover:scale-[1.02] hover:border hover:border-farm-green-300",
-                            "active:scale-[0.98] active:bg-farm-green-300",
+                            "hover:bg-farm-green-600 hover:text-white hover:shadow-md hover:scale-[1.02] hover:border hover:border-farm-green-500",
+                            "active:scale-[0.98] active:bg-farm-green-700",
                             isActive
                               ? "bg-farm-green-500 text-white font-medium shadow-md border border-white"
-                              : "text-farm-green-600",
+                              : "text-farm-green-100",
                           )}
                         >
                           <ChevronRight className={cn(
                             "h-4 w-4 transition-colors",
-                            isActive ? "text-white" : "text-farm-green-500"
+                            isActive ? "text-white" : "text-farm-green-300"
                           )} />
                           <span>{submenu.title}</span>
                         </Link>
@@ -356,16 +356,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       href={route.href}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200 ease-in-out relative",
-                        "hover:bg-farm-green-200 hover:text-farm-green-900 hover:shadow-md hover:scale-[1.02] hover:border hover:border-farm-green-300",
-                        "active:scale-[0.98] active:bg-farm-green-300",
+                        "hover:bg-farm-green-600 hover:text-white hover:shadow-md hover:scale-[1.02] hover:border hover:border-farm-green-500",
+                        "active:scale-[0.98] active:bg-farm-green-700",
                         isActive
                           ? "bg-farm-green-500 text-white font-medium shadow-md border border-white"
-                          : "text-farm-green-600",
+                          : "text-farm-green-100",
                       )}
                     >
                       <route.icon className={cn(
                         "h-5 w-5 transition-colors",
-                        isActive ? "text-white" : "text-farm-green-500"
+                        isActive ? "text-white" : "text-farm-green-300"
                       )} />
                       <span>{route.title}</span>
                     </Link>
@@ -380,14 +380,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Main Content Area - Lower z-index than sidebar */}
       <div className="dashboard-main-content flex flex-col flex-1 min-w-0 relative z-10">
         {/* Dashboard Header */}
-        <header className="dashboard-header border-b border-farm-green-200 bg-white/80 backdrop-blur-sm shadow-sm relative z-20">
+        <header className="dashboard-header border-b border-farm-green-600 bg-farm-green-800 shadow-sm relative z-20">
           <div className="flex h-16 items-center justify-between px-4 lg:px-6">
             {/* Left side - Mobile Menu Button and Title */}
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden border-farm-green-300 hover:bg-farm-green-100"
+                className="lg:hidden border-farm-green-500 hover:bg-farm-green-600 text-white"
                 onClick={() => {
                   console.log('Hamburger clicked, current state:', sidebarOpen)
                   setSidebarOpen(!sidebarOpen)
@@ -397,10 +397,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Menu className="h-5 w-5" />
               </Button>
               {/* Page Title - Moved from center to left */}
-              <div className="flex items-center gap-2 text-sm text-farm-green-600">
+              <div className="flex items-center gap-2 text-sm text-white">
                 <span className="text-xs sm:text-sm font-medium">Management Dashboard</span>
-                <span className="hidden sm:inline text-farm-green-400">•</span>
-                <span className="text-xs sm:text-sm text-farm-green-700">
+                <span className="hidden sm:inline text-farm-green-200">•</span>
+                <span className="text-xs sm:text-sm text-farm-green-100">
                   {getActiveRouteDisplay()}
                 </span>
               </div>
@@ -420,7 +420,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       setShowSearchResults(e.target.value.length > 0)
                     }}
                     onFocus={() => setShowSearchResults(searchQuery.length > 0)}
-                    className="w-64 h-9 px-4 text-sm border border-farm-green-200 rounded-lg bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-farm-green-500 focus:border-transparent"
+                    className="w-64 h-9 px-4 text-sm border border-farm-green-500 rounded-lg bg-white/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-farm-green-300 focus:border-transparent text-farm-green-800 placeholder-farm-green-500"
                   />
                 </div>
                 
@@ -448,12 +448,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 )}
               </div>
 
-              <Button variant="ghost" size="icon" className="relative hover:bg-farm-green-100">
-                <Bell className="h-5 w-5 text-farm-green-600" />
+              <Button variant="ghost" size="icon" className="relative hover:bg-farm-green-600 text-white">
+                <Bell className="h-5 w-5" />
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-orange-500 text-white flex items-center justify-center font-medium">3</Badge>
               </Button>
-              <Button variant="ghost" size="icon" className="hover:bg-farm-green-100">
-                <User className="h-5 w-5 text-farm-green-600" />
+              <Button variant="ghost" size="icon" className="hover:bg-farm-green-600 text-white">
+                <User className="h-5 w-5" />
               </Button>
             </div>
           </div>
