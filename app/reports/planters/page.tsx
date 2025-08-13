@@ -73,6 +73,7 @@ interface BillingData {
 // Detailed sugar production data for the first tab
 const detailedProductionData = [
   {
+    sugarMill: "URSUMCO",
     planterCode: "HDJ/Abuso, Mercy R.",
     planterName: "Abuso, Mercy R.",
     location: "Danawan, Mabinay",
@@ -99,6 +100,7 @@ const detailedProductionData = [
     status: "completed"
   },
   {
+    sugarMill: "SONEDCO",
     planterCode: "HDJ/Acabal, Maximiano C.",
     planterName: "Acabal, Maximiano C.",
     location: "Lapay, Bayawan City",
@@ -125,6 +127,7 @@ const detailedProductionData = [
     status: "completed"
   },
   {
+    sugarMill: "TOLONG",
     planterCode: "HDJ/Aguilar, Harry N.",
     planterName: "Aguilar, Harry N.",
     location: "Villasol, Bayawan City",
@@ -151,6 +154,7 @@ const detailedProductionData = [
     status: "processing"
   },
   {
+    sugarMill: "BUGAY",
     planterCode: "HDJ/Angca, Restituto O.",
     planterName: "Angca, Restituto O.",
     location: "Ganas, Tara, Mabinay",
@@ -177,6 +181,7 @@ const detailedProductionData = [
     status: "completed"
   },
   {
+    sugarMill: "CAB",
     planterCode: "HDJ/Angca, Restituto O.",
     planterName: "Angca, Restituto O.",
     location: "Ganas, Tara, Mabinay",
@@ -203,6 +208,7 @@ const detailedProductionData = [
     status: "completed"
   },
   {
+    sugarMill: "URSUMCO",
     planterCode: "HDJ/Ayunting, Myrna R.",
     planterName: "Ayunting, Myrna R.",
     location: "Banaybanay, Bayawan City",
@@ -229,6 +235,7 @@ const detailedProductionData = [
     status: "pending"
   },
   {
+    sugarMill: "SONEDCO",
     planterCode: "HDJ/Baal, Rosalie L.",
     planterName: "Baal, Rosalie L.",
     location: "Banaybanay, Bayawan City",
@@ -524,6 +531,7 @@ export default function PlantersProductionReport() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-gray-200 bg-gray-50">
+                          <th className="text-left p-3 font-medium text-gray-700">Plant or Sugar Mill</th>
                           <th className="text-left p-3 font-medium text-gray-700">Planter Code</th>
                           <th className="text-left p-3 font-medium text-gray-700">Planter's Name</th>
                           <th className="text-left p-3 font-medium text-gray-700">Location</th>
@@ -553,6 +561,11 @@ export default function PlantersProductionReport() {
                       <tbody>
                         {detailedProductionData.map((entry, index) => (
                           <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="p-3 text-gray-900 font-medium">
+                              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                {entry.sugarMill}
+                              </Badge>
+                            </td>
                             <td className="p-3 text-gray-900 font-medium">{entry.planterCode}</td>
                             <td className="p-3 text-gray-900">{entry.planterName}</td>
                             <td className="p-3 text-gray-700">{entry.location}</td>
@@ -615,6 +628,9 @@ export default function PlantersProductionReport() {
                                 <div>
                                   <h3 className="font-semibold text-gray-800">{entry.planterName}</h3>
                                   <p className="text-sm text-gray-600">{entry.planterCode}</p>
+                                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 mt-1">
+                                    {entry.sugarMill}
+                                  </Badge>
                                 </div>
                               </div>
                               

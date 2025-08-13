@@ -11,8 +11,32 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Filter, MoreHorizontal, Plus, Search, User, MapPin, Upload, Camera, FileImage } from "lucide-react"
-import { useState } from "react"
+import { Filter, MoreHorizontal, Plus, Search, User, MapPin, Upload, Camera, FileImage, Building2, Users, AlertTriangle } from "lucide-react"
+import { useState, useEffect } from "react"
+
+// Sugar Mill data structure
+interface SugarMill {
+  id: string
+  plantCode: string
+  fullName: string
+  shortName: string
+  city: string
+  province: string
+  operatingStatus: "operational" | "maintenance" | "closed" | "seasonal"
+}
+
+// Association data structure
+interface Association {
+  id: string
+  name: string
+  shortName: string
+  sugarMillId: string
+  sugarMillCode: string
+  city: string
+  province: string
+  status: "active" | "inactive"
+  isAccredited: boolean
+}
 
 export default function PlantersRegistrationPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -29,7 +53,12 @@ export default function PlantersRegistrationPage() {
     profilePicture: null as File | null,
     validIdType: "",
     validIdNumber: "",
-    validIdPicture: null as File | null
+    validIdPicture: null as File | null,
+    sugarMillId: "",
+    sugarMillCode: "",
+    associationId: "",
+    associationName: "",
+    cropYear: "2024-2025"
   })
 
   const provinces = [
@@ -56,11 +85,149 @@ export default function PlantersRegistrationPage() {
     "Other Government-Issued ID"
   ]
 
+  // Mock data for Sugar Mills
+  const sugarMills: SugarMill[] = [
+    {
+      id: "MILL-001",
+      plantCode: "URSUMCO",
+      fullName: "United Robina Sugar Milling Corporation",
+      shortName: "URSUMCO",
+      city: "Dumaguete City",
+      province: "Negros Oriental",
+      operatingStatus: "operational"
+    },
+    {
+      id: "MILL-002",
+      plantCode: "SONEDCO",
+      fullName: "Southern Negros Development Corporation",
+      shortName: "SONEDCO",
+      city: "Bayawan City",
+      province: "Negros Oriental",
+      operatingStatus: "operational"
+    },
+    {
+      id: "MILL-003",
+      plantCode: "TOLONG",
+      fullName: "Tolong Sugar Milling Company",
+      shortName: "TOLONG",
+      city: "Tolong",
+      province: "Negros Oriental",
+      operatingStatus: "operational"
+    },
+    {
+      id: "MILL-004",
+      plantCode: "BUGAY",
+      fullName: "Bugay Sugar Milling Corporation",
+      shortName: "BUGAY",
+      city: "Mabinay",
+      province: "Negros Oriental",
+      operatingStatus: "operational"
+    },
+    {
+      id: "MILL-005",
+      plantCode: "CAB",
+      fullName: "Central Azucarera de Bais",
+      shortName: "CAB",
+      city: "Bais City",
+      province: "Negros Oriental",
+      operatingStatus: "operational"
+    }
+  ]
+
+  // Mock data for Associations
+  const associations: Association[] = [
+    {
+      id: "ASSO-001",
+      name: "Negros Oriental Sugar Planters Association",
+      shortName: "NOSPA",
+      sugarMillId: "MILL-001",
+      sugarMillCode: "URSUMCO",
+      city: "Dumaguete City",
+      province: "Negros Oriental",
+      status: "active",
+      isAccredited: true
+    },
+    {
+      id: "ASSO-002",
+      name: "Bayawan Sugar Farmers Cooperative",
+      shortName: "BASUCO",
+      sugarMillId: "MILL-002",
+      sugarMillCode: "SONEDCO",
+      city: "Bayawan City",
+      province: "Negros Oriental",
+      status: "active",
+      isAccredited: true
+    },
+    {
+      id: "ASSO-003",
+      name: "Mabinay Sugar Planters Union",
+      shortName: "MASPU",
+      sugarMillId: "MILL-004",
+      sugarMillCode: "BUGAY",
+      city: "Mabinay",
+      province: "Negros Oriental",
+      status: "active",
+      isAccredited: true
+    },
+    {
+      id: "ASSO-004",
+      name: "Tolong Sugar Planters Association",
+      shortName: "TOSPA",
+      sugarMillId: "MILL-003",
+      sugarMillCode: "TOLONG",
+      city: "Tolong",
+      province: "Negros Oriental",
+      status: "active",
+      isAccredited: true
+    },
+    {
+      id: "ASSO-005",
+      name: "Bais Sugar Planters Cooperative",
+      shortName: "BASUCO",
+      sugarMillId: "MILL-005",
+      sugarMillCode: "CAB",
+      city: "Bais City",
+      province: "Negros Oriental",
+      status: "active",
+      isAccredited: true
+    }
+  ]
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }))
+
+    // If sugar mill is changed, reset association selection
+    if (field === "sugarMillId") {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value,
+        associationId: "",
+        associationName: ""
+      }))
+    }
+  }
+
+  // Get filtered associations based on selected sugar mill
+  const getFilteredAssociations = () => {
+    if (!formData.sugarMillId) return []
+    return associations.filter(association => 
+      association.sugarMillId === formData.sugarMillId && 
+      association.status === "active" && 
+      association.isAccredited
+    )
+  }
+
+  // Get selected sugar mill details
+  const getSelectedSugarMill = () => {
+    return sugarMills.find(mill => mill.id === formData.sugarMillId)
+  }
+
+  // Get selected association details
+  const getSelectedAssociation = () => {
+    return associations.find(association => association.id === formData.associationId)
   }
 
   const handleFileChange = (field: string, file: File | null) => {
@@ -99,7 +266,12 @@ export default function PlantersRegistrationPage() {
       profilePicture: null,
       validIdType: "",
       validIdNumber: "",
-      validIdPicture: null
+      validIdPicture: null,
+      sugarMillId: "",
+      sugarMillCode: "",
+      associationId: "",
+      associationName: "",
+      cropYear: "2024-2025"
     })
   }
 
@@ -111,6 +283,9 @@ export default function PlantersRegistrationPage() {
       area: "25 hectares",
       registrationDate: "Jan 15, 2024",
       status: "Active",
+      sugarMill: "URSUMCO",
+      association: "NOSPA",
+      cropYear: "2024-2025"
     },
     {
       id: "P-1002",
@@ -119,6 +294,9 @@ export default function PlantersRegistrationPage() {
       area: "18 hectares",
       registrationDate: "Feb 3, 2024",
       status: "Active",
+      sugarMill: "SONEDCO",
+      association: "BASUCO",
+      cropYear: "2024-2025"
     },
     {
       id: "P-1003",
@@ -127,6 +305,9 @@ export default function PlantersRegistrationPage() {
       area: "32 hectares",
       registrationDate: "Mar 12, 2024",
       status: "Active",
+      sugarMill: "TOLONG",
+      association: "TOSPA",
+      cropYear: "2024-2025"
     },
     {
       id: "P-1004",
@@ -135,6 +316,9 @@ export default function PlantersRegistrationPage() {
       area: "15 hectares",
       registrationDate: "Apr 5, 2024",
       status: "Pending",
+      sugarMill: "BUGAY",
+      association: "MASPU",
+      cropYear: "2024-2025"
     },
     {
       id: "P-1005",
@@ -143,6 +327,9 @@ export default function PlantersRegistrationPage() {
       area: "22 hectares",
       registrationDate: "Apr 18, 2024",
       status: "Inactive",
+      sugarMill: "CAB",
+      association: "BASUCO",
+      cropYear: "2024-2025"
     },
     {
       id: "P-1006",
@@ -151,6 +338,9 @@ export default function PlantersRegistrationPage() {
       area: "40 hectares",
       registrationDate: "May 2, 2024",
       status: "Active",
+      sugarMill: "URSUMCO",
+      association: "NOSPA",
+      cropYear: "2024-2025"
     },
     {
       id: "P-1007",
@@ -159,6 +349,9 @@ export default function PlantersRegistrationPage() {
       area: "28 hectares",
       registrationDate: "May 20, 2024",
       status: "Pending",
+      sugarMill: "SONEDCO",
+      association: "BASUCO",
+      cropYear: "2024-2025"
     },
   ]
 
@@ -470,6 +663,152 @@ export default function PlantersRegistrationPage() {
                   </div>
                 </div>
 
+                {/* Sugar Mill and Association Selection Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-farm-green-200">
+                    <Building2 className="h-5 w-5 text-farm-green-600" />
+                    <h3 className="text-lg font-semibold text-farm-green-800">Sugar Mill & Association</h3>
+                  </div>
+                  
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm text-blue-800">
+                        <p className="font-medium mb-1">Important Business Rules:</p>
+                        <ul className="space-y-1 text-xs">
+                          <li>• Planters can only be members of one association per crop year per Sugar Mill</li>
+                          <li>• Association selection depends on the chosen Sugar Mill</li>
+                          <li>• Only accredited associations are available for selection</li>
+                          <li>• Membership transfer is restricted during active crop year if deliveries exist</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="sugarMill" className="text-sm font-medium text-gray-700">
+                        Sugar Mill *
+                      </Label>
+                      <Select 
+                        value={formData.sugarMillId} 
+                        onValueChange={(value) => handleInputChange("sugarMillId", value)}
+                      >
+                        <SelectTrigger className="border-gray-300 focus:border-farm-green-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+                          <SelectValue placeholder="Select Sugar Mill" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {sugarMills
+                            .filter(mill => mill.operatingStatus === "operational")
+                            .map((mill) => (
+                              <SelectItem key={mill.id} value={mill.id}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{mill.plantCode}</span>
+                                  <span className="text-xs text-gray-500">{mill.fullName}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      {getSelectedSugarMill() && (
+                        <div className="text-xs text-gray-600 mt-1">
+                          <span className="font-medium">Location:</span> {getSelectedSugarMill()?.city}, {getSelectedSugarMill()?.province}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="association" className="text-sm font-medium text-gray-700">
+                        Association *
+                      </Label>
+                      <Select 
+                        value={formData.associationId} 
+                        onValueChange={(value) => {
+                          const association = associations.find(a => a.id === value)
+                          setFormData(prev => ({
+                            ...prev,
+                            associationId: value,
+                            associationName: association?.name || ""
+                          }))
+                        }}
+                        disabled={!formData.sugarMillId}
+                      >
+                        <SelectTrigger className="border-gray-300 focus:border-farm-green-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+                          <SelectValue placeholder={formData.sugarMillId ? "Select Association" : "Select Sugar Mill first"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getFilteredAssociations().map((association) => (
+                            <SelectItem key={association.id} value={association.id}>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{association.shortName}</span>
+                                <span className="text-xs text-gray-500">{association.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {getFilteredAssociations().length === 0 && formData.sugarMillId && (
+                        <div className="text-xs text-red-600 mt-1">
+                          No accredited associations available for this Sugar Mill
+                        </div>
+                      )}
+                      {getSelectedAssociation() && (
+                        <div className="text-xs text-gray-600 mt-1">
+                          <span className="font-medium">Location:</span> {getSelectedAssociation()?.city}, {getSelectedAssociation()?.province}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="cropYear" className="text-sm font-medium text-gray-700">
+                        Crop Year *
+                      </Label>
+                      <Select 
+                        value={formData.cropYear} 
+                        onValueChange={(value) => handleInputChange("cropYear", value)}
+                      >
+                        <SelectTrigger className="border-gray-300 focus:border-farm-green-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+                          <SelectValue placeholder="Select Crop Year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2024-2025">2024-2025</SelectItem>
+                          <SelectItem value="2025-2026">2025-2026</SelectItem>
+                          <SelectItem value="2026-2027">2026-2027</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Registration Summary
+                      </Label>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm">
+                        {formData.sugarMillId && formData.associationId ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <Building2 className="h-4 w-4 text-green-600" />
+                              <span className="font-medium">{getSelectedSugarMill()?.plantCode}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-blue-600" />
+                              <span className="font-medium">{getSelectedAssociation()?.shortName}</span>
+                            </div>
+                            <div className="text-xs text-gray-600 mt-2">
+                              Crop Year: {formData.cropYear}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-gray-500">
+                            Select Sugar Mill and Association to see summary
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Form Actions */}
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                   <Button
@@ -527,6 +866,9 @@ export default function PlantersRegistrationPage() {
                         <TableHead>Name</TableHead>
                         <TableHead>Location</TableHead>
                         <TableHead>Area</TableHead>
+                        <TableHead>Sugar Mill</TableHead>
+                        <TableHead>Association</TableHead>
+                        <TableHead>Crop Year</TableHead>
                         <TableHead>Registration Date</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="w-[50px]"></TableHead>
@@ -539,6 +881,17 @@ export default function PlantersRegistrationPage() {
                           <TableCell>{planter.name}</TableCell>
                           <TableCell>{planter.location}</TableCell>
                           <TableCell>{planter.area}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                              {planter.sugarMill}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              {planter.association}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-gray-600">{planter.cropYear}</TableCell>
                           <TableCell>{planter.registrationDate}</TableCell>
                           <TableCell>
                             <Badge
@@ -601,6 +954,26 @@ export default function PlantersRegistrationPage() {
                               <div>
                                 <span className="text-farm-green-600 font-medium">Area:</span>
                                 <p className="text-gray-700">{planter.area}</p>
+                              </div>
+                              <div>
+                                <span className="text-farm-green-600 font-medium">Sugar Mill:</span>
+                                <div className="mt-1">
+                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                                    {planter.sugarMill}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-farm-green-600 font-medium">Association:</span>
+                                <div className="mt-1">
+                                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                                    {planter.association}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-farm-green-600 font-medium">Crop Year:</span>
+                                <p className="text-gray-700">{planter.cropYear}</p>
                               </div>
                               <div>
                                 <span className="text-farm-green-600 font-medium">Registered:</span>
