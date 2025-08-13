@@ -4,6 +4,7 @@ import type React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
+import { MessagingSystem } from "@/components/messaging-system"
 import {
   BarChart3,
   ChevronRight,
@@ -22,6 +23,7 @@ import {
   Sprout,
   Search,
   Truck,
+  MessageSquare,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -452,6 +454,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Bell className="h-5 w-5" />
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-orange-500 text-white flex items-center justify-center font-medium">3</Badge>
               </Button>
+              <Button variant="ghost" size="icon" className="relative hover:bg-farm-green-600 text-white">
+                <MessageSquare className="h-5 w-5" />
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-blue-500 text-white flex items-center justify-center font-medium">5</Badge>
+              </Button>
               <Button variant="ghost" size="icon" className="hover:bg-farm-green-600 text-white">
                 <User className="h-5 w-5" />
               </Button>
@@ -480,6 +486,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </footer>
       </div>
+      
+      {/* Messaging System */}
+      <MessagingSystem />
     </div>
   )
 }
