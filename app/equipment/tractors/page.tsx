@@ -26,9 +26,16 @@ import {
   XCircle,
   Settings,
   Navigation,
-  Calculator
+  Calculator,
+  Map,
+  Square,
+  Download,
+  Upload,
+  Play,
+  Pause,
+  RefreshCw
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 
 interface TractorData {
   id: string
@@ -66,9 +73,60 @@ interface OperatorData {
   status: "active" | "available" | "off-duty"
 }
 
+interface TractorLocation {
+  id: string
+  tractorId: string
+  model: string
+  operator: string
+  latitude: number
+  longitude: number
+  speed: number
+  heading: number
+  status: "working" | "moving" | "stopped" | "maintenance"
+  timestamp: string
+  fieldId?: string
+  fieldName?: string
+  operation?: string
+  estimatedCompletion?: string
+  areaCompleted?: number
+}
+
+interface FieldOperation {
+  id: string
+  tractorId: string
+  model: string
+  operator: string
+  fieldName: string
+  operation: string
+  startTime: string
+  estimatedEndTime: string
+  status: "active" | "completed" | "cancelled"
+  waypoints: Array<{
+    latitude: number
+    longitude: number
+    timestamp: string
+  }>
+}
+
 export default function TractorRentals() {
   const [activeTab, setActiveTab] = useState("tractors")
   const [searchQuery, setSearchQuery] = useState("")
+
+  // Map and tracking states
+  const [isClient, setIsClient] = useState(false)
+  const [mapView, setMapView] = useState("satellite")
+  const [zoomLevel, setZoomLevel] = useState(10) // Zoom level for ~10km radius view
+  const [isTrackingActive, setIsTrackingActive] = useState(true)
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [selectedTime, setSelectedTime] = useState(new Date().toTimeString().split(' ')[0].substring(0, 5))
+  const [selectedTractor, setSelectedTractor] = useState<string>("all")
+  const [showHistoricalView, setShowHistoricalView] = useState(false)
+  
+  // Current location coordinates (Bayawan City)
+  const currentLocation = {
+    latitude: 9.3654, // Bayawan City, Negros Oriental coordinates
+    longitude: 122.8047
+  }
 
   // Mock data
   const tractors: TractorData[] = [
@@ -157,6 +215,110 @@ export default function TractorRentals() {
     }
   ]
 
+  // Mock tractor location data (real-time)
+  const tractorLocations: TractorLocation[] = [
+    {
+      id: "loc-001",
+      tractorId: "TCR-001",
+      model: "John Deere 5E",
+      operator: "Miguel Santos",
+      latitude: 9.3654,
+      longitude: 122.8047,
+      speed: 8,
+      heading: 180,
+      status: "working",
+      timestamp: new Date().toISOString(),
+      fieldId: "FLD-001",
+      fieldName: "Hacienda San Miguel - Lot 15",
+      operation: "Land Preparation",
+      estimatedCompletion: "16:30",
+      areaCompleted: 8.5
+    },
+    {
+      id: "loc-002",
+      tractorId: "TCR-002",
+      model: "Kubota M7060",
+      operator: "Carlos Reyes",
+      latitude: 9.3754,
+      longitude: 122.8147,
+      speed: 0,
+      heading: 90,
+      status: "stopped",
+      timestamp: new Date().toISOString(),
+      fieldId: "FLD-002",
+      fieldName: "Batangas Sugar Estate - Block C",
+      operation: "Planting",
+      estimatedCompletion: "17:45",
+      areaCompleted: 5.2
+    },
+    {
+      id: "loc-003",
+      tractorId: "TCR-003",
+      model: "Massey Ferguson 4707",
+      operator: "Jose Cruz",
+      latitude: 9.3554,
+      longitude: 122.7947,
+      speed: 12,
+      heading: 270,
+      status: "moving",
+      timestamp: new Date().toISOString(),
+      fieldId: "FLD-003",
+      fieldName: "Tayawan Farms - Section A",
+      operation: "Mowing",
+      estimatedCompletion: "15:20",
+      areaCompleted: 3.8
+    }
+  ]
+
+  // Mock field operation data
+  const fieldOperations: FieldOperation[] = [
+    {
+      id: "FO-001",
+      tractorId: "TCR-001",
+      model: "John Deere 5E",
+      operator: "Miguel Santos",
+      fieldName: "Hacienda San Miguel - Lot 15",
+      operation: "Land Preparation",
+      startTime: "2024-01-20T08:00:00Z",
+      estimatedEndTime: "2024-01-20T16:30:00Z",
+      status: "active",
+      waypoints: [
+        { latitude: 9.3654, longitude: 122.8047, timestamp: "2024-01-20T08:00:00Z" },
+        { latitude: 9.3655, longitude: 122.8048, timestamp: "2024-01-20T10:30:00Z" },
+        { latitude: 9.3656, longitude: 122.8049, timestamp: "2024-01-20T12:45:00Z" }
+      ]
+    },
+    {
+      id: "FO-002",
+      tractorId: "TCR-002",
+      model: "Kubota M7060",
+      operator: "Carlos Reyes",
+      fieldName: "Batangas Sugar Estate - Block C",
+      operation: "Planting",
+      startTime: "2024-01-20T09:00:00Z",
+      estimatedEndTime: "2024-01-20T17:45:00Z",
+      status: "active",
+      waypoints: [
+        { latitude: 9.3754, longitude: 122.8147, timestamp: "2024-01-20T09:00:00Z" },
+        { latitude: 9.3755, longitude: 122.8148, timestamp: "2024-01-20T11:15:00Z" },
+        { latitude: 9.3756, longitude: 122.8149, timestamp: "2024-01-20T13:30:00Z" }
+      ]
+    }
+  ]
+
+  // Map helper functions
+  const switchMapLayer = (view: string) => {
+    setMapView(view)
+  }
+
+  const zoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 1, 20))
+  }
+
+  const zoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 1, 8))
+  }
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "working":
@@ -181,6 +343,26 @@ export default function TractorRentals() {
         return <Badge variant="secondary">{status}</Badge>
     }
   }
+
+  const getTractorStatusBadge = (status: string) => {
+    switch (status) {
+      case "working":
+        return <Badge className="bg-amber-500 text-white">Working</Badge>
+      case "moving":
+        return <Badge className="bg-green-500 text-white">Moving</Badge>
+      case "stopped":
+        return <Badge className="bg-yellow-500 text-white">Stopped</Badge>
+      case "maintenance":
+        return <Badge className="bg-red-500 text-white">Maintenance</Badge>
+      default:
+        return <Badge variant="secondary">{status}</Badge>
+    }
+  }
+
+  // Set client flag to prevent hydration issues
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const stats = {
     totalTractors: 8,
@@ -278,7 +460,7 @@ export default function TractorRentals() {
 
         {/* Tabs Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-6">
-          <TabsList className="grid w-full grid-cols-5 border border-farm-green-200 p-1">
+          <TabsList className="grid w-full grid-cols-6 border border-farm-green-200 p-1">
             <TabsTrigger 
               value="tractors" 
               className="data-[state=active]:bg-farm-green-500 data-[state=active]:text-white"
@@ -302,6 +484,12 @@ export default function TractorRentals() {
               className="data-[state=active]:bg-farm-green-500 data-[state=active]:text-white"
             >
               Field Areas
+            </TabsTrigger>
+            <TabsTrigger 
+              value="tracking" 
+              className="data-[state=active]:bg-farm-green-500 data-[state=active]:text-white"
+            >
+              Tracking
             </TabsTrigger>
             <TabsTrigger 
               value="billing" 
@@ -607,6 +795,318 @@ export default function TractorRentals() {
                     </Button>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tracking Tab */}
+          <TabsContent value="tracking" className="space-y-4 mt-6">
+            {/* Header with Controls */}
+            <Card className="border-green-200 rounded-xl">
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-farm-green-800">
+                      <MapPin className="h-5 w-5" />
+                      Tractor Tracking & Field Operations
+                    </CardTitle>
+                    <CardDescription>Real-time tracking and field operation monitoring</CardDescription>
+                  </div>
+                  {isClient && (
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setIsTrackingActive(!isTrackingActive)}
+                        className="border-green-200 text-green-700 hover:bg-green-50"
+                      >
+                        {isTrackingActive ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
+                        {isTrackingActive ? 'Pause' : 'Resume'} Tracking
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setShowHistoricalView(!showHistoricalView)}
+                        className="border-green-200 text-green-700 hover:bg-green-50"
+                      >
+                        <Clock className="h-4 w-4 mr-2" />
+                        {showHistoricalView ? 'Live View' : 'Historical View'}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="border-green-200 text-green-700 hover:bg-green-50"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Export Data
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {/* Filters */}
+                {isClient && (
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div>
+                      <Label htmlFor="tractor-filter" className="text-sm font-medium text-gray-700">Tractor</Label>
+                      <Select value={selectedTractor} onValueChange={setSelectedTractor}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="All Tractors" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Tractors</SelectItem>
+                          {tractors.map(tractor => (
+                            <SelectItem key={tractor.id} value={tractor.id}>
+                              {tractor.model} - {tractor.operator}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="date-filter" className="text-sm font-medium text-gray-700">Date</Label>
+                      <Input
+                        id="date-filter"
+                        type="date"
+                        value={selectedDate}
+                        onChange={(e) => setSelectedDate(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="time-filter" className="text-sm font-medium text-gray-700">Time</Label>
+                      <Input
+                        id="time-filter"
+                        type="time"
+                        value={selectedTime}
+                        onChange={(e) => setSelectedTime(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button 
+                        className="w-full bg-green-500 hover:bg-green-600 text-white"
+                        onClick={() => {
+                          // Apply filters logic here
+                          console.log('Applying filters:', { selectedTractor, selectedDate, selectedTime })
+                        }}
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Apply Filters
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Interactive Map */}
+                <Card className="border-gray-200 rounded-xl">
+                  <CardHeader>
+                    <CardTitle>Real-Time Tractor Tracking Map</CardTitle>
+                    <CardDescription>Live GPS tracking with satellite imagery and field operation monitoring</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div 
+                      className="relative h-[600px] bg-gradient-to-br from-blue-50 to-green-50 rounded-lg border-2 border-gray-200 overflow-hidden"
+                      onWheel={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        
+                        const zoomSensitivity = 0.5
+                        const delta = e.deltaY * zoomSensitivity
+                        
+                        if (delta < 0) {
+                          zoomIn()
+                        } else if (delta > 0) {
+                          zoomOut()
+                        }
+                      }}
+                    >
+                      {/* Real Map Background */}
+                      <div className="absolute inset-0">
+                        {/* Overlay to hide "View larger map" link */}
+                        <div className="absolute top-0 left-0 w-32 h-12 bg-transparent z-10 pointer-events-none"></div>
+                        
+                        {/* SINGLE MAP IFRAME - Only one renders at a time */}
+                        {isClient ? (() => {
+                          return (
+                            <div className="relative w-full h-full">
+                              {/* Overlay to hide "View larger map" link in Google Maps iframe */}
+                              <div className="absolute top-0 left-0 w-32 h-12 bg-transparent z-10 pointer-events-none"></div>
+                              <iframe
+                                src={`https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d${Math.pow(2, 20 - zoomLevel)}!2d${currentLocation.longitude}!3d${currentLocation.latitude}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sph!4v1234567890&t=s&maptype=satellite`}
+                                className="w-full h-full border-0 transition-opacity duration-200"
+                                allowFullScreen
+                                loading="lazy"
+                                referrerPolicy="no-referrer-when-downgrade"
+                                key={`satellite-${zoomLevel}`}
+                              />
+                            </div>
+                          )
+                        })() : (
+                          // Loading state while client is initializing
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                            <div className="text-center">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
+                              <p className="text-sm text-gray-600">Loading map...</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Map Controls Overlay */}
+                      {isClient && (
+                        <>
+                          <div className="absolute top-4 right-4 flex flex-col gap-2 z-[1000]">
+                            <Button 
+                              variant="secondary" 
+                              size="sm" 
+                              className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg opacity-50 cursor-not-allowed"
+                              disabled
+                              title="Street view temporarily disabled"
+                            >
+                              <Navigation className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="secondary" 
+                              size="sm" 
+                              className={`${mapView === 'satellite' ? 'bg-green-100 text-green-800' : 'bg-white/90 backdrop-blur-sm hover:bg-white'} shadow-lg`}
+                              onClick={() => switchMapLayer('satellite')}
+                            >
+                              <Map className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="secondary" 
+                              size="sm" 
+                              className={`${mapView === 'hybrid' ? 'bg-green-100 text-green-800' : 'bg-white/90 backdrop-blur-sm hover:bg-white'} shadow-lg`}
+                              onClick={() => switchMapLayer('hybrid')}
+                            >
+                              <Square className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Tractor Location Markers */}
+                      {tractorLocations.map((tractor) => (
+                        <div
+                          key={tractor.id}
+                          className="absolute z-[1000] transform -translate-x-1/2 -translate-y-1/2"
+                          style={{
+                            left: `${((tractor.longitude - (currentLocation.longitude - 0.05)) / 0.1) * 100 + 20}%`,
+                            top: `${((currentLocation.latitude + 0.05 - tractor.latitude) / 0.1) * 100}%`
+                          }}
+                        >
+                          <div className="relative">
+                            {/* Tractor Icon */}
+                            <div className="w-8 h-8 bg-green-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
+                              <Tractor className="h-4 w-4 text-white" />
+                            </div>
+                            
+                            {/* Status Indicator */}
+                            <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
+                              tractor.status === 'working' ? 'bg-amber-500' :
+                              tractor.status === 'moving' ? 'bg-green-500' :
+                              tractor.status === 'stopped' ? 'bg-yellow-500' :
+                              'bg-red-500'
+                            }`}></div>
+                            
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 p-3 min-w-[250px] opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
+                              <div className="text-sm font-semibold text-gray-800">{tractor.model}</div>
+                              <div className="text-xs text-gray-600">Operator: {tractor.operator}</div>
+                              <div className="text-xs text-gray-600">Speed: {tractor.speed} km/h</div>
+                              <div className="text-xs text-gray-600">Status: {tractor.status}</div>
+                              {tractor.fieldName && (
+                                <div className="text-xs text-gray-600">Field: {tractor.fieldName}</div>
+                              )}
+                              {tractor.operation && (
+                                <div className="text-xs text-gray-600">Operation: {tractor.operation}</div>
+                              )}
+                              {tractor.areaCompleted && (
+                                <div className="text-xs text-gray-600">Area Completed: {tractor.areaCompleted} ha</div>
+                              )}
+                              {tractor.estimatedCompletion && (
+                                <div className="text-xs text-gray-600">ETA: {tractor.estimatedCompletion}</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Legend */}
+                      <div className="absolute bottom-4 right-4 transform -translate-x-20 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-gray-200">
+                        <div className="text-sm font-semibold mb-2">Tractor Status</div>
+                        <div className="space-y-1 text-xs">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                            <span>Working</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                            <span>Moving</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <span>Stopped</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                            <span>Maintenance</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Tractor Status Table */}
+                <Card className="border-gray-200 rounded-xl">
+                  <CardHeader>
+                    <CardTitle>Live Tractor Status</CardTitle>
+                    <CardDescription>Real-time status of all tractors in the fleet</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-gray-200 bg-green-50">
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Tractor</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Operator</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Speed</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Location</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Field</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Operation</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Area Completed</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">ETA</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Last Update</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {tractorLocations.map((tractor) => (
+                            <tr key={tractor.id} className="border-b border-gray-100 hover:bg-gray-50">
+                              <td className="py-3 px-4 font-medium text-gray-800">{tractor.model}</td>
+                              <td className="py-3 px-4 text-gray-700">{tractor.operator}</td>
+                              <td className="py-3 px-4">{getTractorStatusBadge(tractor.status)}</td>
+                              <td className="py-3 px-4 text-gray-700">{tractor.speed} km/h</td>
+                              <td className="py-3 px-4 text-gray-700">
+                                {tractor.latitude.toFixed(4)}, {tractor.longitude.toFixed(4)}
+                              </td>
+                              <td className="py-3 px-4 text-gray-700">{tractor.fieldName || '-'}</td>
+                              <td className="py-3 px-4 text-gray-700">{tractor.operation || '-'}</td>
+                              <td className="py-3 px-4 text-gray-700">{tractor.areaCompleted ? `${tractor.areaCompleted} ha` : '-'}</td>
+                              <td className="py-3 px-4 text-gray-700">{tractor.estimatedCompletion || '-'}</td>
+                              <td className="py-3 px-4 text-gray-700">
+                                {new Date(tractor.timestamp).toLocaleTimeString()}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
               </CardContent>
             </Card>
           </TabsContent>
