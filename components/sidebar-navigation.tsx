@@ -57,6 +57,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     if (pathname.startsWith('/reports/planters')) return 'Reports • Planters Production'
     if (pathname.startsWith('/prices')) return 'Sugar Prices'
     if (pathname.startsWith('/assistance/fertilizer')) return 'Farm Assistance • Fertilizer'
+    
     if (pathname.startsWith('/settings')) return 'Settings'
     return 'Dashboard'
   }
@@ -182,6 +183,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           href: "/assistance/fertilizer",
           active: false,
         },
+        
         {
           title: "Other Assistance",
           href: "/assistance/other",

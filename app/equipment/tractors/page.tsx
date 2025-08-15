@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { TractorManagement } from "@/components/tractor-management"
+import { OperatorManagement } from "@/components/operator-management"
 import { 
   Tractor, 
   MapPin,
@@ -1053,57 +1054,9 @@ export default function TractorRentals() {
 
           {/* Operators Tab */}
           <TabsContent value="operators" className="space-y-4 sm:space-y-6 mt-6">
-            <Card className="border-blue-200 rounded-xl shadow-md">
-              <CardHeader>
-                <CardTitle className="text-blue-800 text-xl sm:text-2xl font-bold">
-                  Tractor Operators
-                </CardTitle>
-                <CardDescription className="text-blue-600 text-sm sm:text-base">
-                  Manage operator details and assignments
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200 bg-blue-50">
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Operator ID</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Name</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">License</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Specialization</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Experience</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Assigned Tractor</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {operators.map((operator) => (
-                        <tr key={operator.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 px-4 font-medium text-gray-800">{operator.id}</td>
-                          <td className="py-3 px-4 text-gray-700">{operator.name}</td>
-                          <td className="py-3 px-4 text-gray-700">
-                            <div>{operator.license}</div>
-                            <div className="text-sm text-gray-600">Exp: {operator.licenseExpiry}</div>
-                          </td>
-                          <td className="py-3 px-4 text-gray-700">{operator.specialization}</td>
-                          <td className="py-3 px-4 text-gray-700">{operator.experience} years</td>
-                          <td className="py-3 px-4 text-gray-700">{operator.assignedTractor}</td>
-                          <td className="py-3 px-4">
-                            {getStatusBadge(operator.status)}
-                          </td>
-                          <td className="py-3 px-4">
-                            <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
+            <OperatorManagement 
+              tractors={tractors.map(t => ({ id: t.id, model: t.model }))}
+            />
           </TabsContent>
 
           {/* Field Areas Tab */}

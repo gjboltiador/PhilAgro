@@ -1,3 +1,5 @@
+"use client"
+
 import { DashboardLayout } from "@/components/sidebar-navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,8 +9,50 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Filter, Plus, Search, Sprout } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useMemo, useState } from "react"
+import { FertilizerCatalog } from "@/components/fertilizer-catalog"
 
 export default function FertilizerAssistancePage() {
+  // Catalogs
+  const fertilizerCatalog = [
+    { id: "urea", name: "Urea (46-0-0)", unit: "bag (50kg)", price: 1500 },
+    { id: "npk141414", name: "Complete (14-14-14)", unit: "bag (50kg)", price: 1550 },
+    { id: "dap01846", name: "DAP (18-46-0)", unit: "bag (50kg)", price: 1800 },
+    { id: "mop0060", name: "MOP (0-0-60)", unit: "bag (50kg)", price: 1750 },
+    { id: "organic", name: "Organic Compost", unit: "bag (40kg)", price: 350 },
+  ]
+
+  const suppliers = [
+    { id: "own", name: "Own Supply (Warehouse)" },
+    { id: "sup-agrimax", name: "AgriMax Trading" },
+    { id: "sup-growmore", name: "GrowMore Agri Supply" },
+    { id: "sup-greenleaf", name: "GreenLeaf Fertilizers" },
+  ]
+
+  type PaymentMode = "cash" | "30d" | "60d" | "installment"
+  const paymentModes: { id: PaymentMode; label: string; interestRate: number }[] = [
+    { id: "cash", label: "Cash (0% interest)", interestRate: 0 },
+    { id: "30d", label: "30 days (2%)", interestRate: 0.02 },
+    { id: "60d", label: "60 days (4%)", interestRate: 0.04 },
+    { id: "installment", label: "Installment (Monthly 1.5% x 6)", interestRate: 0.09 },
+  ]
+
+  type LineItem = { productId: string; quantity: number; unitPrice: number }
+  type Application = {
+    id: string
+    planterCode: string
+    planterName: string
+    municipality: string
+    supplierType: "own" | "external"
+    supplierId: string
+    paymentMode: PaymentMode
+    items: LineItem[]
+    notes?: string
+    createdAt: string
+    status: "pending" | "approved" | "released"
+  }
+
   const programs = [
     {
       id: "FA-2024-01",
@@ -100,6 +144,57 @@ export default function FertilizerAssistancePage() {
     },
   ]
 
+  // Applications state
+  const [applications, setApplications] = useState<Application[]>([])
+  const [newApp, setNewApp] = useState<Partial<Application>>({
+    planterCode: "",
+    planterName: "",
+    municipality: "",
+    supplierType: "own",
+    supplierId: "own",
+    paymentMode: "cash",
+    items: [{ productId: "urea", quantity: 0, unitPrice: 1500 }],
+    notes: "",
+  })
+
+  const lineItems = (newApp.items || []) as LineItem[]
+  const currency = (n: number) => n.toLocaleString(undefined, { style: "currency", currency: "PHP", maximumFractionDigits: 2 })
+  const subtotal = useMemo(() => lineItems.reduce((sum, li) => sum + (li.quantity || 0) * (li.unitPrice || 0), 0), [lineItems])
+  const interestRate = useMemo(() => paymentModes.find(p => p.id === newApp.paymentMode)?.interestRate || 0, [newApp.paymentMode])
+  const interest = useMemo(() => subtotal * interestRate, [subtotal, interestRate])
+  const grandTotal = useMemo(() => subtotal + interest, [subtotal, interest])
+
+  function updateItem(index: number, patch: Partial<LineItem>) {
+    const next = [...lineItems]
+    next[index] = { ...next[index], ...patch }
+    setNewApp({ ...newApp, items: next })
+  }
+  function addItem() {
+    setNewApp({ ...newApp, items: [...lineItems, { productId: fertilizerCatalog[0].id, quantity: 0, unitPrice: fertilizerCatalog[0].price }] })
+  }
+  function removeItem(index: number) {
+    const next = lineItems.filter((_, i) => i !== index)
+    setNewApp({ ...newApp, items: next })
+  }
+  function submitApplication() {
+    if (!newApp.planterName || !newApp.planterCode) return
+    const app: Application = {
+      id: `FA-${Date.now()}`,
+      planterCode: newApp.planterCode!,
+      planterName: newApp.planterName!,
+      municipality: newApp.municipality || "",
+      supplierType: newApp.supplierType || "own",
+      supplierId: newApp.supplierId || "own",
+      paymentMode: newApp.paymentMode || "cash",
+      items: lineItems,
+      notes: newApp.notes || "",
+      createdAt: new Date().toISOString(),
+      status: "pending",
+    }
+    setApplications(prev => [app, ...prev])
+    setNewApp({ planterCode: "", planterName: "", municipality: "", supplierType: "own", supplierId: "own", paymentMode: "cash", items: [{ productId: "urea", quantity: 0, unitPrice: 1500 }], notes: "" })
+  }
+
   return (
     <DashboardLayout>
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
@@ -144,11 +239,216 @@ export default function FertilizerAssistancePage() {
           </Card>
         </div>
 
-        <Tabs defaultValue="programs" className="space-y-4">
+        <Tabs defaultValue="applications" className="space-y-4">
           <TabsList>
+            <TabsTrigger value="applications">Applications</TabsTrigger>
             <TabsTrigger value="programs">Assistance Programs</TabsTrigger>
             <TabsTrigger value="distributions">Recent Distributions</TabsTrigger>
+            <TabsTrigger value="catalog">Fertilizers & Herbicides</TabsTrigger>
           </TabsList>
+
+          {/* Applications Tab */}
+          <TabsContent value="applications" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Fertilizer Assistance Application</CardTitle>
+                <CardDescription>Apply fertilizer support for planters, select suppliers and payment mode with automatic computations.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Planter Details */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Planter Code</label>
+                    <Input value={newApp.planterCode || ""} onChange={(e) => setNewApp({ ...newApp, planterCode: e.target.value })} placeholder="PLT-2024-001" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Planter Name</label>
+                    <Input value={newApp.planterName || ""} onChange={(e) => setNewApp({ ...newApp, planterName: e.target.value })} placeholder="Juan Dela Cruz" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Municipality</label>
+                    <Input value={newApp.municipality || ""} onChange={(e) => setNewApp({ ...newApp, municipality: e.target.value })} placeholder="Bayawan City" />
+                  </div>
+                </div>
+
+                {/* Supplier and Payment */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Supplier Type</label>
+                    <Select value={newApp.supplierType || "own"} onValueChange={(v: any) => setNewApp({ ...newApp, supplierType: v, supplierId: v === "own" ? "own" : suppliers[1].id })}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="own">Own Supplies (Warehouse)</SelectItem>
+                        <SelectItem value="external">Outside Supplier</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Supplier</label>
+                    <Select value={newApp.supplierId || "own"} onValueChange={(v: any) => setNewApp({ ...newApp, supplierId: v })}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {suppliers
+                          .filter(s => (newApp.supplierType || "own") === "own" ? s.id === "own" : s.id !== "own")
+                          .map(s => (
+                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Mode of Payment</label>
+                    <Select value={newApp.paymentMode || "cash"} onValueChange={(v: any) => setNewApp({ ...newApp, paymentMode: v })}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {paymentModes.map(m => (
+                          <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Line Items */}
+                <div className="rounded-md border">
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Fertilizer</TableHead>
+                          <TableHead>Unit Price</TableHead>
+                          <TableHead>Quantity</TableHead>
+                          <TableHead>Line Total</TableHead>
+                          <TableHead></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {lineItems.map((li, idx) => {
+                          const product = fertilizerCatalog.find(p => p.id === li.productId) || fertilizerCatalog[0]
+                          return (
+                            <TableRow key={idx}>
+                              <TableCell className="min-w-[220px]">
+                                <Select value={li.productId} onValueChange={(v: any) => updateItem(idx, { productId: v, unitPrice: fertilizerCatalog.find(p => p.id === v)?.price || 0 })}>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {fertilizerCatalog.map(p => (
+                                      <SelectItem key={p.id} value={p.id}>{p.name} • {p.unit}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell className="min-w-[140px]">
+                                <Input type="number" value={li.unitPrice} onChange={(e) => updateItem(idx, { unitPrice: Number(e.target.value || 0) })} />
+                              </TableCell>
+                              <TableCell className="min-w-[120px]">
+                                <Input type="number" value={li.quantity} onChange={(e) => updateItem(idx, { quantity: Number(e.target.value || 0) })} />
+                              </TableCell>
+                              <TableCell className="min-w-[160px] font-medium">{currency((li.quantity || 0) * (li.unitPrice || 0))}</TableCell>
+                              <TableCell>
+                                <Button variant="outline" size="sm" onClick={() => removeItem(idx)}>Remove</Button>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <div className="p-3">
+                    <Button variant="outline" size="sm" onClick={addItem}>Add Item</Button>
+                  </div>
+                </div>
+
+                {/* Totals */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-start-3 border rounded-md p-4 bg-green-50">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Subtotal</span>
+                      <span className="font-semibold">{currency(subtotal)}</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-sm text-gray-600">Interest ({Math.round(interestRate * 100)}%)</span>
+                      <span className="font-semibold">{currency(interest)}</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-3 border-t pt-3">
+                      <span className="text-sm text-gray-700">Grand Total</span>
+                      <span className="text-lg font-bold">{currency(grandTotal)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes and Actions */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium">Notes</label>
+                    <Input value={newApp.notes || ""} onChange={(e) => setNewApp({ ...newApp, notes: e.target.value })} placeholder="Any additional remarks..." />
+                  </div>
+                  <div className="flex items-end justify-end">
+                    <Button onClick={submitApplication} className="bg-green-600 hover:bg-green-700">Submit Application</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Applications List */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Submitted Applications</CardTitle>
+                <CardDescription>Track applications and computed totals.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Planter</TableHead>
+                        <TableHead>Supplier</TableHead>
+                        <TableHead>Payment</TableHead>
+                        <TableHead>Items</TableHead>
+                        <TableHead>Total</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {applications.map((a) => {
+                        const supplierName = suppliers.find(s => s.id === a.supplierId)?.name || "-"
+                        const pm = paymentModes.find(p => p.id === a.paymentMode)?.label || a.paymentMode
+                        const total = a.items.reduce((s, li) => s + li.quantity * li.unitPrice, 0)
+                        const interestR = paymentModes.find(p => p.id === a.paymentMode)?.interestRate || 0
+                        const grand = total + total * interestR
+                        return (
+                          <TableRow key={a.id}>
+                            <TableCell className="font-medium">{a.id}</TableCell>
+                            <TableCell>{a.planterName} ({a.planterCode})</TableCell>
+                            <TableCell>{supplierName}</TableCell>
+                            <TableCell>{pm}</TableCell>
+                            <TableCell>{a.items.length}</TableCell>
+                            <TableCell className="font-semibold">{currency(grand)}</TableCell>
+                            <TableCell>
+                              <Badge variant={a.status === "pending" ? "secondary" : "default"}>{a.status}</Badge>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                      {applications.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center text-sm text-gray-500 py-6">No applications yet.</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="programs" className="space-y-4">
             <Card>
@@ -288,6 +588,10 @@ export default function FertilizerAssistancePage() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="catalog" className="space-y-4">
+            <FertilizerCatalog />
           </TabsContent>
 
           <TabsContent value="distributions" className="space-y-4">

@@ -42,6 +42,7 @@ import {
   Image as ImageIcon
 } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
+import { DriverManagement } from "@/components/driver-management"
 
 interface TruckData {
   id: string
@@ -3316,81 +3317,9 @@ export default function TruckRentals() {
 
           {/* Drivers Tab */}
           <TabsContent value="drivers" className="space-y-4 mt-6">
-            <Card className="border-blue-200">
-              <CardHeader>
-                <CardTitle className="text-blue-800 text-2xl font-bold">
-                  Driver Management
-                </CardTitle>
-                <CardDescription className="text-blue-600">
-                  Manage driver details and assignments
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Driver ID</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Name</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">License</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Contact</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Assigned Truck</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4 font-medium text-gray-800">DRV-001</td>
-                        <td className="py-3 px-4 text-gray-700">Juan Santos</td>
-                        <td className="py-3 px-4 text-gray-700">
-                          <div>N01-12-345678</div>
-                          <div className="text-sm text-gray-600">Exp: Dec 31, 2025</div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">
-                          <div>+63 917 123 4567</div>
-                          <div className="text-sm text-gray-600">Bacolod City, Negros Occidental</div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">TRK-001</td>
-                        <td className="py-3 px-4">
-                          <Badge className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                            Active
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4">
-                          <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                      <tr className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4 font-medium text-gray-800">DRV-002</td>
-                        <td className="py-3 px-4 text-gray-700">Pedro Cruz</td>
-                        <td className="py-3 px-4 text-gray-700">
-                          <div>N02-34-567890</div>
-                          <div className="text-sm text-gray-600">Exp: Jun 15, 2026</div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">
-                          <div>+63 918 234 5678</div>
-                          <div className="text-sm text-gray-600">Lipa City, Batangas</div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">TRK-002</td>
-                        <td className="py-3 px-4">
-                          <Badge className="bg-amber-200 text-amber-800 px-3 py-1 rounded-full text-sm font-medium">
-                            On Route
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4">
-                          <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
+            <DriverManagement 
+              trucks={trucks.map(t => ({ id: t.id, plateNumber: t.plateNumber }))}
+            />
           </TabsContent>
 
           {/* Routes Tab */}

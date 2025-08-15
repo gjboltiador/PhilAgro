@@ -575,7 +575,19 @@ export function MessagingSystem() {
                                 <p className="text-xs text-gray-600 line-clamp-3">{template.content}</p>
                               </div>
                               <div className="flex items-center gap-2">
-                                <Button size="sm" variant="outline" className="text-xs">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="text-xs"
+                                  onClick={() => {
+                                    setNewMessage(prev => ({
+                                      ...prev,
+                                      subject: template.subject,
+                                      content: template.content,
+                                    }))
+                                    setActiveTab("compose")
+                                  }}
+                                >
                                   <Copy className="h-3 w-3 mr-1" />
                                   Use Template
                                 </Button>
