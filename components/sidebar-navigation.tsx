@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 import { MessagingSystem } from "@/components/messaging-system"
+import { ProfileManagement } from "@/components/profile-management"
 import {
   BarChart3,
   ChevronRight,
@@ -470,9 +471,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <MessageSquare className="h-5 w-5" />
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-blue-500 text-white flex items-center justify-center font-medium">5</Badge>
               </Button>
-              <Button variant="ghost" size="icon" className="hover:bg-farm-green-600 text-white">
-                <User className="h-5 w-5" />
-              </Button>
+              <ProfileManagement />
             </div>
           </div>
         </header>
