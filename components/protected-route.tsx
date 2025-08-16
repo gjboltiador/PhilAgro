@@ -25,7 +25,7 @@ export function ProtectedRoute({
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push("/auth/login")
+      router.push("/?login=1")
     }
   }, [isAuthenticated, router])
 
@@ -45,7 +45,7 @@ export function ProtectedRoute({
           </CardHeader>
           <CardContent className="text-center">
             <Button 
-              onClick={() => router.push("/auth/login")}
+              onClick={() => router.push("/?login=1")}
               className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white"
             >
               Go to Login

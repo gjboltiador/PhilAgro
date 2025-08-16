@@ -12,6 +12,7 @@ import { Filter, Plus, Search, Sprout } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useMemo, useState } from "react"
 import { FertilizerCatalog } from "@/components/fertilizer-catalog"
+import { ProtectedRoute } from "@/components/protected-route"
 
 export default function FertilizerAssistancePage() {
   // Catalogs
@@ -196,7 +197,8 @@ export default function FertilizerAssistancePage() {
   }
 
   return (
-    <DashboardLayout>
+    <ProtectedRoute requiredPermission="farm_management">
+      <DashboardLayout>
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold tracking-tight">Fertilizer Assistance</h2>
@@ -694,6 +696,7 @@ export default function FertilizerAssistancePage() {
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
+      </DashboardLayout>
+    </ProtectedRoute>
   )
 }

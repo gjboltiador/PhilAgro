@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { DashboardLayout } from "@/components/sidebar-navigation"
+import { ProtectedRoute } from "@/components/protected-route"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -30,6 +31,7 @@ import {
   Download,
   Upload
 } from "lucide-react"
+import UserManagement from "@/components/user-management"
 
 // Association data structure
 interface Association {
@@ -455,6 +457,7 @@ export default function SettingsPage() {
   })
 
   return (
+    <ProtectedRoute requiredPermission="system_configuration">
     <DashboardLayout>
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <div className="flex items-center justify-between">
@@ -1110,10 +1113,8 @@ export default function SettingsPage() {
                 <CardTitle>User Management</CardTitle>
                 <CardDescription>Manage system users and permissions</CardDescription>
               </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">User management functionality will be implemented here.</p>
-              </CardContent>
             </Card>
+            <UserManagement />
           </TabsContent>
 
           {/* System Tab */}
@@ -1131,5 +1132,6 @@ export default function SettingsPage() {
         </Tabs>
       </div>
     </DashboardLayout>
+    </ProtectedRoute>
   )
 }

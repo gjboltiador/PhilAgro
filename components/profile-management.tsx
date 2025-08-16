@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useAuth } from "@/contexts/auth-context"
 import { 
   User, 
   Settings, 
@@ -36,21 +37,12 @@ interface UserProfile {
   lastLogin: string
 }
 
-const mockUser: UserProfile = {
-  name: "Godfrey J. Boltiador",
-  email: "godfrey.boltiador@philagro.com",
-  role: "System Administrator",
-  phone: "+63 912 345 6789",
-  location: "Bacolod City, Negros Occidental",
-  joinDate: "January 15, 2024",
-  lastLogin: "2 hours ago"
-}
-
 export function ProfileManagement() {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const { user, isAuthenticated, logout } = useAuth()
 
   const handleLogout = () => {
-    console.log("Logging out...")
+    logout()
   }
 
   return (
@@ -70,21 +62,23 @@ export function ProfileManagement() {
         <div className="p-4 bg-gradient-to-r from-farm-green-50 to-farm-green-100 border-b">
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={mockUser.avatar} alt={mockUser.name} />
+              <AvatarImage src={undefined} alt={(user?.name || user?.email || "Guest") as string} />
               <AvatarFallback className="bg-farm-green-500 text-white font-medium">
-                {mockUser.name.split(' ').map(n => n[0]).join('')}
+                {(user?.name || user?.email || "G").slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-farm-green-900 truncate">
-                {mockUser.name}
+                {user?.name || user?.email || "Guest"}
               </p>
               <p className="text-xs text-farm-green-600 truncate">
-                {mockUser.email}
+                {user?.email || "Not signed in"}
               </p>
-              <Badge variant="secondary" className="mt-1 text-xs">
-                {mockUser.role}
-              </Badge>
+              {isAuthenticated && (
+                <Badge variant="secondary" className="mt-1 text-xs capitalize">
+                  {user?.role}
+                </Badge>
+              )}
             </div>
           </div>
         </div>

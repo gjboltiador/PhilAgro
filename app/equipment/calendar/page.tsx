@@ -8,6 +8,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
+import { ProtectedRoute } from "@/components/protected-route"
 
 export default function BookingCalendarPage() {
   const [date, setDate] = useState<Date | undefined>(new Date())
@@ -48,6 +49,7 @@ export default function BookingCalendarPage() {
   ]
 
   return (
+    <ProtectedRoute requiredPermission="equipment_operation">
     <DashboardLayout>
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <div className="flex items-center justify-between">
@@ -228,5 +230,6 @@ export default function BookingCalendarPage() {
         </div>
       </div>
     </DashboardLayout>
+    </ProtectedRoute>
   )
 }

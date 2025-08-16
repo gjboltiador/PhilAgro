@@ -35,6 +35,7 @@ import {
 } from "lucide-react"
 import { SugarPriceChart } from "@/components/sugar-price-chart"
 import { PriceAlerts } from "@/components/price-alerts"
+import { ProtectedRoute } from "@/components/protected-route"
 
 // Interfaces
 interface SugarPrice {
@@ -308,7 +309,8 @@ export default function SugarPricesPage() {
     : ""
 
   return (
-    <DashboardLayout>
+    <ProtectedRoute requiredPermission="price_management">
+      <DashboardLayout>
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold tracking-tight">Sugar Prices Management</h2>
@@ -844,6 +846,7 @@ export default function SugarPricesPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </DashboardLayout>
+      </DashboardLayout>
+    </ProtectedRoute>
   )
 }

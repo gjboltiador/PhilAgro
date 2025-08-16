@@ -38,6 +38,7 @@ import {
   Route
 } from "lucide-react"
 import TruckDetailsModal from "@/components/truck-details-modal"
+import { ProtectedRoute } from "@/components/protected-route"
 import RateCalculator from "@/components/rate-calculator"
 
 interface TruckData {
@@ -482,6 +483,7 @@ export default function TruckBookingManagement() {
   }
 
   return (
+    <ProtectedRoute requiredPermission="equipment_operation">
     <DashboardLayout>
       <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header */}
@@ -1033,5 +1035,6 @@ export default function TruckBookingManagement() {
          />
        </div>
      </DashboardLayout>
+     </ProtectedRoute>
    )
  }

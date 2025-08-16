@@ -1,6 +1,7 @@
 "use client"
 
 import { DashboardLayout } from "@/components/sidebar-navigation"
+import { ProtectedRoute } from "@/components/protected-route"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -356,6 +357,7 @@ export default function PlantersRegistrationPage() {
   ]
 
   return (
+    <ProtectedRoute requiredPermission="farm_management">
     <DashboardLayout>
       <div className="flex-1 space-y-6 p-6 md:p-8">
         <div className="flex items-center justify-between">
@@ -1037,5 +1039,6 @@ export default function PlantersRegistrationPage() {
         </Card>
       </div>
     </DashboardLayout>
+    </ProtectedRoute>
   )
 }

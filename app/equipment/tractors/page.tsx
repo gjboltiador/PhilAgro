@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { TractorManagement } from "@/components/tractor-management"
 import { OperatorManagement } from "@/components/operator-management"
+import { ProtectedRoute } from "@/components/protected-route"
 import { 
   Tractor, 
   MapPin,
@@ -784,6 +785,7 @@ export default function TractorRentals() {
   }
 
   return (
+    <ProtectedRoute requiredPermission="equipment_operation">
     <DashboardLayout>
       <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header */}
@@ -2381,5 +2383,6 @@ export default function TractorRentals() {
         </Dialog>
       </div>
     </DashboardLayout>
+    </ProtectedRoute>
   )
 } 

@@ -1,6 +1,7 @@
 "use client"
 
 import { DashboardLayout } from "@/components/sidebar-navigation"
+import { ProtectedRoute } from "@/components/protected-route"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -354,7 +355,7 @@ export default function FarmManagement() {
   const [isLoading, setIsLoading] = useState(false)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [zoomLevel, setZoomLevel] = useState(12) // Default zoom for 10km diameter view
-  const fileInputRef = useRef(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const mapRef = useRef(null)
 
   // Farm area data (empty for now)
@@ -453,6 +454,7 @@ export default function FarmManagement() {
   }
 
   return (
+    <ProtectedRoute requiredPermission="farm_management">
     <DashboardLayout>
       <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header */}
@@ -2660,7 +2662,7 @@ export default function FarmManagement() {
                           <div className="mt-2">
                             <Button
                               variant="outline"
-                              onClick={() => fileInputRef.current?.click()}
+                              onClick={() => (fileInputRef.current as HTMLInputElement | null)?.click()}
                               disabled={isLoading}
                             >
                               {isLoading ? 'Processing...' : 'Choose KMZ File'}
@@ -2780,5 +2782,6 @@ export default function FarmManagement() {
             )}
       </div>
     </DashboardLayout>
+    </ProtectedRoute>
   )
 }

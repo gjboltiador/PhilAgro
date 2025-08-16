@@ -1,6 +1,7 @@
 "use client"
 
 import { DashboardLayout } from "@/components/sidebar-navigation"
+import { ProtectedRoute } from "@/components/protected-route"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -384,6 +385,7 @@ export default function PlantersProductionReport() {
   }
 
   return (
+    <ProtectedRoute requiredPermission="production_reports">
     <DashboardLayout>
       <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header */}
@@ -913,5 +915,6 @@ export default function PlantersProductionReport() {
         </Tabs>
       </div>
     </DashboardLayout>
+    </ProtectedRoute>
   )
 } 

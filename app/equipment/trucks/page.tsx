@@ -43,6 +43,7 @@ import {
 } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { DriverManagement } from "@/components/driver-management"
+import { ProtectedRoute } from "@/components/protected-route"
 
 interface TruckData {
   id: string
@@ -1512,6 +1513,7 @@ export default function TruckRentals() {
   }
 
   return (
+    <ProtectedRoute requiredPermission="equipment_operation">
     <DashboardLayout>
       <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header */}
@@ -4543,5 +4545,6 @@ export default function TruckRentals() {
         </Dialog>
       </div>
     </DashboardLayout>
+    </ProtectedRoute>
   )
 } 

@@ -30,6 +30,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useAuth } from "@/contexts/auth-context"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -41,13 +42,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const { hasPermission, user } = useAuth()
 
   // Debug logging
   console.log('Sidebar state:', sidebarOpen)
 
   // Function to get active route display
   const getActiveRouteDisplay = () => {
-    if (pathname === '/') return 'Overview'
+    if (pathname === '/' || pathname.startsWith('/dashboard')) return 'Overview'
     if (pathname.startsWith('/registration/planters')) return 'Registration • Planters'
     if (pathname.startsWith('/registration/farms')) return 'Registration • Farms'
     if (pathname.startsWith('/registration/haulers')) return 'Registration • Haulers'
@@ -108,7 +110,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     {
       title: "Dashboard",
       icon: BarChart3,
-      href: "/",
+      href: "/dashboard",
       active: true,
     },
     {
@@ -119,16 +121,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           title: "Planters",
           href: "/registration/planters",
           active: false,
+          requiredPermission: "farm_management",
         },
         {
           title: "Farms",
           href: "/registration/farms",
           active: false,
+          requiredPermission: "farm_management",
         },
         {
           title: "Haulers",
           href: "/registration/haulers",
           active: false,
+          requiredPermission: "farm_management",
         },
       ],
     },
@@ -140,21 +145,25 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           title: "Trucks",
           href: "/equipment/trucks",
           active: false,
+          requiredPermission: "equipment_operation",
         },
         {
           title: "Tractors",
           href: "/equipment/tractors",
           active: false,
+          requiredPermission: "equipment_operation",
         },
         {
           title: "Other Equipment",
           href: "/equipment/other",
           active: false,
+          requiredPermission: "equipment_management",
         },
         {
           title: "Calendar",
           href: "/equipment/calendar",
           active: false,
+          requiredPermission: "equipment_operation",
         },
       ],
     },
@@ -166,11 +175,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           title: "Planters Production",
           href: "/reports/planters",
           active: false,
+          requiredPermission: "production_reports",
         },
         {
           title: "Haulers",
           href: "/reports/haulers",
           active: false,
+          requiredPermission: "production_reports",
         },
       ],
     },
@@ -182,12 +193,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           title: "Fertilizer",
           href: "/assistance/fertilizer",
           active: false,
+          requiredPermission: "farm_management",
         },
         
         {
           title: "Other Assistance",
           href: "/assistance/other",
           active: false,
+          requiredPermission: "farm_management",
         },
       ],
     },
@@ -196,6 +209,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       icon: TrendingUp,
       href: "/prices",
       active: false,
+      requiredPermission: "price_management",
     },
 
     {
@@ -203,8 +217,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       href: "/settings",
       icon: Settings,
       active: false,
+      requiredPermission: "system_configuration",
     },
   ]
+
+  const filteredRoutes = (routes as any[])
+    .map((route) => {
+      if (route.submenu) {
+        const filteredSubmenu = route.submenu.filter((submenu: any) => !submenu.requiredPermission || hasPermission(submenu.requiredPermission))
+        return { ...route, submenu: filteredSubmenu }
+      }
+      return route
+    })
+    .filter((route) => !route.requiredPermission || hasPermission(route.requiredPermission))
+    .filter((route) => (route.submenu ? route.submenu.length > 0 : true))
 
   return (
     <div className="dashboard-wrapper min-h-screen flex bg-gradient-to-br from-farm-green-50 via-background to-farm-earth-50">
@@ -242,7 +268,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* SCROLLABLE NAVIGATION - Menu Items */}
           <nav className="flex-1 overflow-y-auto px-4 pt-4 space-y-2 bg-gradient-to-b from-farm-green-700 to-farm-green-800">
-            {routes.map((route) => (
+            {filteredRoutes.map((route) => (
               <div key={route.title}>
                 {route.submenu ? (
                   <div className="space-y-1">
@@ -253,7 +279,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     </div>
                     {/* Submenu Items */}
                     <div className="ml-6 space-y-1">
-                      {route.submenu.map((submenu) => {
+                      {route.submenu.map((submenu: any) => {
                         const isActive = pathname === submenu.href || pathname.startsWith(submenu.href + '/')
                         return (
                           <Link
@@ -327,7 +353,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* SCROLLABLE NAVIGATION - Menu Items */}
         <nav className="flex-1 overflow-y-auto px-4 pt-4 space-y-2 bg-gradient-to-b from-farm-green-700 to-farm-green-800">
-          {routes.map((route) => (
+          {filteredRoutes.map((route) => (
             <div key={route.title}>
               {route.submenu ? (
                 <div className="space-y-1">
@@ -338,7 +364,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   </div>
                   {/* Submenu Items */}
                   <div className="ml-6 space-y-1">
-                    {route.submenu.map((submenu) => {
+                    {route.submenu.map((submenu: any) => {
                       const isActive = pathname === submenu.href || pathname.startsWith(submenu.href + '/')
                       return (
                         <Link
@@ -489,7 +515,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center gap-2 lg:gap-4">
               <span className="text-xs lg:text-sm">© 2024 Phil Agro-Industrial Technologist Agriculture</span>
               <span className="hidden lg:inline">•</span>
-              <span className="hidden lg:inline">Logged in as: Godfrey J. Boltiador</span>
+              <span className="hidden lg:inline">Logged in as: {user?.name || user?.email || "Guest"}</span>
             </div>
             <div className="flex items-center gap-2 lg:gap-4">
               <span className="hidden md:inline text-xs lg:text-sm">Version 1.0.0</span>
