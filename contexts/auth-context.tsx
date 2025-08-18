@@ -17,6 +17,7 @@ interface AuthContextType {
   logout: () => void
   hasPermission: (permission: string) => boolean
   hasRole: (role: string) => boolean
+  isInitialized: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -76,6 +77,7 @@ const rolePermissions: Record<string, string[]> = {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
     // Check for existing session on mount
@@ -93,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(mockUser)
       setIsAuthenticated(true)
     }
+    setIsInitialized(true)
   }, [])
 
   const login = async (email: string, password: string, role: string) => {
@@ -125,9 +128,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setIsAuthenticated(false)
     
-    // Redirect to login page
+    // Redirect to landing with login dialog
     if (typeof window !== 'undefined') {
-      window.location.href = '/auth/login'
+      window.location.href = '/?login=1'
     }
   }
 
@@ -147,7 +150,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     hasPermission,
-    hasRole
+    hasRole,
+    isInitialized
   }
 
   return (
