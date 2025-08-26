@@ -4,7 +4,7 @@ import { Wheat, Users, TrendingUp } from "lucide-react"
 export function HeroSection() {
   return (
     <section id="home" className="relative min-h-[520px] flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/5">
-      <div className="absolute inset-0 bg-[url('/sugarcane-field-golden-hour.png')] bg-cover bg-center opacity-20"></div>
+      <div className="absolute inset-0 bg-[url('/placeholder.jpg')] bg-cover bg-center opacity-20"></div>
       <div className="relative z-10 container mx-auto px-4 text-center">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">

@@ -10,18 +10,36 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Shield, Users, Plus, Edit, Trash2, Search, Lock, Unlock } from "lucide-react"
+import { Shield, Users, Plus, Edit, Trash2, Search, Lock, Unlock, Phone, User, IdCard, Mail } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 
 type SystemUserStatus = "active" | "inactive"
 
 interface SystemUserRecord {
   id: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
+  contactNumber: string
   role: string
   status: SystemUserStatus
+  profileInfo: {
+    department?: string
+    position?: string
+    location?: string
+    employeeId?: string
+    dateOfBirth?: string
+    address?: string
+    emergencyContact?: string
+    emergencyContactNumber?: string
+  }
+  otpSettings: {
+    enabled: boolean
+    lastVerified?: string
+    preferredMethod: 'sms' | 'email'
+  }
   createdAt: string
+  updatedAt?: string
 }
 
 const LOCAL_STORAGE_KEY = "systemUsers"
@@ -36,9 +54,51 @@ function loadUsers(): SystemUserRecord[] {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY)
     if (!raw) return []
-    return JSON.parse(raw) as SystemUserRecord[]
+    const users = JSON.parse(raw) as any[]
+    
+    // Migrate old user data to new structure
+    return users.map(user => migrateUserData(user))
   } catch {
     return []
+  }
+}
+
+function migrateUserData(user: any): SystemUserRecord {
+  // If user already has the new structure, return as is
+  if (user.firstName && user.lastName && user.profileInfo && user.otpSettings) {
+    return user as SystemUserRecord
+  }
+  
+  // Migrate old structure to new structure
+  const nameParts = (user.name || '').split(' ')
+  const firstName = nameParts[0] || ''
+  const lastName = nameParts.slice(1).join(' ') || ''
+  
+  return {
+    id: user.id,
+    firstName,
+    lastName,
+    email: user.email || '',
+    contactNumber: user.contactNumber || '+63 917 000 0000',
+    role: user.role || 'viewer',
+    status: user.status || 'active',
+    profileInfo: {
+      department: user.department || undefined,
+      position: user.position || undefined,
+      location: user.location || undefined,
+      employeeId: user.employeeId || `EMP${user.id.slice(-3)}`,
+      dateOfBirth: user.dateOfBirth || undefined,
+      address: user.address || undefined,
+      emergencyContact: user.emergencyContact || undefined,
+      emergencyContactNumber: user.emergencyContactNumber || undefined,
+    },
+    otpSettings: {
+      enabled: user.otpEnabled || false,
+      preferredMethod: user.otpMethod || 'sms',
+      lastVerified: user.lastOtpVerified || undefined
+    },
+    createdAt: user.createdAt || new Date().toISOString(),
+    updatedAt: user.updatedAt || undefined
   }
 }
 
@@ -51,9 +111,66 @@ function ensureSeedData(): SystemUserRecord[] {
   const existing = loadUsers()
   if (existing.length > 0) return existing
   const seeded: SystemUserRecord[] = [
-    { id: generateId(), name: "System Administrator", email: "admin@example.com", role: "admin", status: "active", createdAt: new Date().toISOString() },
-    { id: generateId(), name: "Operations Manager", email: "manager@example.com", role: "manager", status: "active", createdAt: new Date().toISOString() },
-    { id: generateId(), name: "Field Operator", email: "operator@example.com", role: "operator", status: "inactive", createdAt: new Date().toISOString() },
+    { 
+      id: generateId(), 
+      firstName: "System", 
+      lastName: "Administrator", 
+      email: "admin@example.com", 
+      contactNumber: "+63 917 123 4567",
+      role: "admin", 
+      status: "active", 
+      profileInfo: {
+        department: "IT",
+        position: "System Administrator",
+        location: "Main Office",
+        employeeId: "EMP001"
+      },
+      otpSettings: {
+        enabled: true,
+        preferredMethod: 'sms'
+      },
+      createdAt: new Date().toISOString() 
+    },
+    { 
+      id: generateId(), 
+      firstName: "Operations", 
+      lastName: "Manager", 
+      email: "manager@example.com", 
+      contactNumber: "+63 917 234 5678",
+      role: "manager", 
+      status: "active", 
+      profileInfo: {
+        department: "Operations",
+        position: "Operations Manager",
+        location: "Field Office",
+        employeeId: "EMP002"
+      },
+      otpSettings: {
+        enabled: true,
+        preferredMethod: 'sms'
+      },
+      createdAt: new Date().toISOString() 
+    },
+    { 
+      id: generateId(), 
+      firstName: "Field", 
+      lastName: "Operator", 
+      email: "operator@example.com", 
+      contactNumber: "+63 917 345 6789",
+      role: "operator", 
+      status: "inactive", 
+      profileInfo: {
+        department: "Field Operations",
+        position: "Field Operator",
+        location: "Remote Site",
+        employeeId: "EMP003"
+      },
+      otpSettings: {
+        enabled: false,
+        preferredMethod: 'sms'
+      },
+      createdAt: new Date().toISOString() 
+    },
   ]
   saveUsers(seeded)
   return seeded
@@ -86,14 +203,20 @@ export function UserManagement() {
   const [showEdit, setShowEdit] = useState<null | SystemUserRecord>(null)
 
   useEffect(() => {
-    setUsers(ensureSeedData())
+    const loadedUsers = ensureSeedData()
+    setUsers(loadedUsers)
+    // Save migrated data back to localStorage to persist the new structure
+    saveUsers(loadedUsers)
   }, [])
 
   const filtered = useMemo(() => {
     return users.filter(u => {
+      const fullName = `${u.firstName} ${u.lastName}`.toLowerCase()
       const matchesSearch =
-        u.name.toLowerCase().includes(search.toLowerCase()) ||
-        u.email.toLowerCase().includes(search.toLowerCase())
+        fullName.includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase()) ||
+        u.contactNumber.includes(search) ||
+        (u.profileInfo?.employeeId && u.profileInfo.employeeId.toLowerCase().includes(search.toLowerCase()))
       const matchesRole = roleFilter === "all" || u.role === roleFilter
       const matchesStatus = statusFilter === "all" || u.status === statusFilter
       return matchesSearch && matchesRole && matchesStatus
@@ -155,7 +278,7 @@ export function UserManagement() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Search name or email"
+                  placeholder="Search name, email, phone, or employee ID"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-9"
@@ -189,19 +312,56 @@ export function UserManagement() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
+                    <TableHead>Contact Info</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Department</TableHead>
+                    <TableHead>OTP Status</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.map((u) => (
                     <TableRow key={u.id}>
-                      <TableCell className="font-medium">{u.name}</TableCell>
-                      <TableCell>{u.email}</TableCell>
+                      <TableCell>
+                        <div className="font-medium">{u.firstName} {u.lastName}</div>
+                        <div className="text-xs text-gray-500">ID: {u.profileInfo?.employeeId || 'N/A'}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1 text-sm">
+                            <Mail className="h-3 w-3 text-gray-400" />
+                            {u.email}
+                          </div>
+                          <div className="flex items-center gap-1 text-sm text-gray-600">
+                            <Phone className="h-3 w-3 text-gray-400" />
+                            {u.contactNumber}
+                          </div>
+                        </div>
+                      </TableCell>
                       <TableCell>{roleBadge(u.role)}</TableCell>
+                      <TableCell>
+                        <div className="text-sm">{u.profileInfo?.department || 'N/A'}</div>
+                        <div className="text-xs text-gray-500">{u.profileInfo?.position || ''}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          {u.otpSettings?.enabled ? (
+                            <Badge className="bg-green-100 text-green-800 text-xs">
+                              <Shield className="h-3 w-3 mr-1" />
+                              Enabled
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-gray-100 text-gray-700 text-xs">
+                              <Shield className="h-3 w-3 mr-1" />
+                              Disabled
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {u.otpSettings?.preferredMethod?.toUpperCase() || 'SMS'}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         {u.status === "active" ? (
                           <Badge className="bg-green-100 text-green-800">Active</Badge>
@@ -209,7 +369,6 @@ export function UserManagement() {
                           <Badge className="bg-gray-100 text-gray-700">Inactive</Badge>
                         )}
                       </TableCell>
-                      <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Button
@@ -245,7 +404,7 @@ export function UserManagement() {
                   ))}
                   {filtered.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-sm text-gray-500">
+                      <TableCell colSpan={7} className="text-center text-sm text-gray-500">
                         No users found
                       </TableCell>
                     </TableRow>
@@ -281,10 +440,10 @@ export function UserManagement() {
 
         {/* Create user dialog */}
         <Dialog open={showCreate} onOpenChange={setShowCreate}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
             <DialogHeader>
               <DialogTitle>Add User</DialogTitle>
-              <DialogDescription>Create a new system user</DialogDescription>
+              <DialogDescription>Create a new system user with detailed profile information</DialogDescription>
             </DialogHeader>
             {!canManage && (
               <div className="mb-3 rounded-md border border-yellow-200 bg-yellow-50 p-2 text-sm text-yellow-800">
@@ -305,10 +464,10 @@ export function UserManagement() {
 
         {/* Edit user dialog */}
         <Dialog open={!!showEdit} onOpenChange={(o) => !o && setShowEdit(null)}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
             <DialogHeader>
               <DialogTitle>Edit User</DialogTitle>
-              <DialogDescription>Update user details and role</DialogDescription>
+              <DialogDescription>Update user details, profile information, and security settings</DialogDescription>
             </DialogHeader>
             {showEdit && (
               <UserForm
@@ -346,36 +505,137 @@ function UserForm({
   roles: string[]
   disabled?: boolean
 }) {
-  const [name, setName] = useState(initial?.name || "")
+  // Basic Info
+  const [firstName, setFirstName] = useState(initial?.firstName || "")
+  const [lastName, setLastName] = useState(initial?.lastName || "")
   const [email, setEmail] = useState(initial?.email || "")
+  const [contactNumber, setContactNumber] = useState(initial?.contactNumber || "")
   const [role, setRole] = useState(initial?.role || roles[0])
   const [status, setStatus] = useState<SystemUserStatus>((initial?.status as SystemUserStatus) || "active")
+  
+  // Profile Info
+  const [department, setDepartment] = useState(initial?.profileInfo?.department || "")
+  const [position, setPosition] = useState(initial?.profileInfo?.position || "")
+  const [location, setLocation] = useState(initial?.profileInfo?.location || "")
+  const [employeeId, setEmployeeId] = useState(initial?.profileInfo?.employeeId || "")
+  const [dateOfBirth, setDateOfBirth] = useState(initial?.profileInfo?.dateOfBirth || "")
+  const [address, setAddress] = useState(initial?.profileInfo?.address || "")
+  const [emergencyContact, setEmergencyContact] = useState(initial?.profileInfo?.emergencyContact || "")
+  const [emergencyContactNumber, setEmergencyContactNumber] = useState(initial?.profileInfo?.emergencyContactNumber || "")
+  
+  // OTP Settings
+  const [otpEnabled, setOtpEnabled] = useState(initial?.otpSettings?.enabled || false)
+  const [otpMethod, setOtpMethod] = useState<'sms' | 'email'>(initial?.otpSettings?.preferredMethod || 'sms')
+  
   const [error, setError] = useState<string>("")
+  const [activeTab, setActiveTab] = useState("basic")
+
+  function isValidPhoneNumber(phone: string): boolean {
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/
+    return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''))
+  }
 
   function handleSubmit() {
-    if (!name.trim()) return setError("Name is required")
+    if (!firstName.trim()) return setError("First name is required")
+    if (!lastName.trim()) return setError("Last name is required")
     if (!email.trim() || !isValidEmail(email)) return setError("Valid email is required")
+    if (!contactNumber.trim() || !isValidPhoneNumber(contactNumber)) return setError("Valid contact number is required")
     if (!role) return setError("Role is required")
+    
     setError("")
-    onSubmit({ name: name.trim(), email: email.trim(), role, status })
+    
+    const userData = {
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim(),
+      contactNumber: contactNumber.trim(),
+      role,
+      status,
+      profileInfo: {
+        department: department.trim() || undefined,
+        position: position.trim() || undefined,
+        location: location.trim() || undefined,
+        employeeId: employeeId.trim() || undefined,
+        dateOfBirth: dateOfBirth || undefined,
+        address: address.trim() || undefined,
+        emergencyContact: emergencyContact.trim() || undefined,
+        emergencyContactNumber: emergencyContactNumber.trim() || undefined,
+      },
+      otpSettings: {
+        enabled: otpEnabled,
+        preferredMethod: otpMethod
+      },
+      updatedAt: new Date().toISOString()
+    }
+    
+    onSubmit(userData)
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-h-[70vh] overflow-y-auto">
       {error && (
         <div className="rounded-md border border-red-200 bg-red-50 p-2 text-sm text-red-700">{error}</div>
       )}
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="basic">Basic Info</TabsTrigger>
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="basic" className="space-y-4">
       <div className="grid gap-3">
+            <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label htmlFor="name">Full name</Label>
-          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} disabled={disabled} />
+                <Label htmlFor="firstName">First Name *</Label>
+                <Input 
+                  id="firstName" 
+                  value={firstName} 
+                  onChange={(e) => setFirstName(e.target.value)} 
+                  disabled={disabled}
+                  placeholder="Enter first name" 
+                />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={disabled} />
+                <Label htmlFor="lastName">Last Name *</Label>
+                <Input 
+                  id="lastName" 
+                  value={lastName} 
+                  onChange={(e) => setLastName(e.target.value)} 
+                  disabled={disabled}
+                  placeholder="Enter last name" 
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <Label htmlFor="email">Email Address *</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                disabled={disabled}
+                placeholder="user@example.com" 
+              />
+            </div>
+            
+            <div className="space-y-1">
+              <Label htmlFor="contactNumber">Contact Number *</Label>
+              <Input 
+                id="contactNumber" 
+                value={contactNumber} 
+                onChange={(e) => setContactNumber(e.target.value)} 
+                disabled={disabled}
+                placeholder="+63 917 123 4567" 
+              />
+              <div className="text-xs text-gray-500">Required for OTP verification</div>
         </div>
+            
+            <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label htmlFor="role">Role</Label>
+                <Label htmlFor="role">Role *</Label>
           <Select value={role} onValueChange={setRole}>
             <SelectTrigger id="role">
               <SelectValue placeholder="Select role" />
@@ -387,6 +647,7 @@ function UserForm({
             </SelectContent>
           </Select>
         </div>
+              
         <div className="space-y-1">
           <Label htmlFor="status">Status</Label>
           <Select value={status} onValueChange={(v) => setStatus(v as SystemUserStatus)}>
@@ -400,9 +661,158 @@ function UserForm({
           </Select>
         </div>
       </div>
-      <div className="flex justify-end gap-2">
+          </div>
+        </TabsContent>
+
+        <TabsContent value="profile" className="space-y-4">
+          <div className="grid gap-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="employeeId">Employee ID</Label>
+                <Input 
+                  id="employeeId" 
+                  value={employeeId} 
+                  onChange={(e) => setEmployeeId(e.target.value)} 
+                  disabled={disabled}
+                  placeholder="EMP001" 
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Input 
+                  id="dateOfBirth" 
+                  type="date" 
+                  value={dateOfBirth} 
+                  onChange={(e) => setDateOfBirth(e.target.value)} 
+                  disabled={disabled}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="department">Department</Label>
+                <Input 
+                  id="department" 
+                  value={department} 
+                  onChange={(e) => setDepartment(e.target.value)} 
+                  disabled={disabled}
+                  placeholder="IT Department" 
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="position">Position</Label>
+                <Input 
+                  id="position" 
+                  value={position} 
+                  onChange={(e) => setPosition(e.target.value)} 
+                  disabled={disabled}
+                  placeholder="System Administrator" 
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <Label htmlFor="location">Work Location</Label>
+              <Input 
+                id="location" 
+                value={location} 
+                onChange={(e) => setLocation(e.target.value)} 
+                disabled={disabled}
+                placeholder="Main Office, Field Site, Remote" 
+              />
+            </div>
+            
+            <div className="space-y-1">
+              <Label htmlFor="address">Address</Label>
+              <Input 
+                id="address" 
+                value={address} 
+                onChange={(e) => setAddress(e.target.value)} 
+                disabled={disabled}
+                placeholder="Complete address" 
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="emergencyContact">Emergency Contact</Label>
+                <Input 
+                  id="emergencyContact" 
+                  value={emergencyContact} 
+                  onChange={(e) => setEmergencyContact(e.target.value)} 
+                  disabled={disabled}
+                  placeholder="Emergency contact name" 
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="emergencyContactNumber">Emergency Contact Number</Label>
+                <Input 
+                  id="emergencyContactNumber" 
+                  value={emergencyContactNumber} 
+                  onChange={(e) => setEmergencyContactNumber(e.target.value)} 
+                  disabled={disabled}
+                  placeholder="+63 917 123 4567" 
+                />
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="security" className="space-y-4">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="text-base">OTP Authentication</div>
+                <div className="text-sm text-gray-500">
+                  Enable one-time password verification for enhanced security
+                </div>
+              </div>
+              <Select value={otpEnabled ? "enabled" : "disabled"} onValueChange={(v) => setOtpEnabled(v === "enabled")}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="enabled">Enabled</SelectItem>
+                  <SelectItem value="disabled">Disabled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {otpEnabled && (
+              <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
+                <div className="space-y-1">
+                  <Label htmlFor="otpMethod">Preferred OTP Method</Label>
+                  <Select value={otpMethod} onValueChange={(v) => setOtpMethod(v as 'sms' | 'email')}>
+                    <SelectTrigger id="otpMethod">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sms">SMS (Text Message)</SelectItem>
+                      <SelectItem value="email">Email</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="text-sm text-gray-600">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Phone className="h-4 w-4" />
+                    <span>SMS will be sent to: {contactNumber || 'No contact number'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    <span>Email will be sent to: {email || 'No email'}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+      
+      <div className="flex justify-end gap-2 pt-4 border-t">
         <Button variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button onClick={handleSubmit} disabled={disabled}>Save</Button>
+        <Button onClick={handleSubmit} disabled={disabled}>Save User</Button>
       </div>
     </div>
   )

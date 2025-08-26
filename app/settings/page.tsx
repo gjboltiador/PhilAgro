@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/sidebar-navigation"
 import { ProtectedRoute } from "@/components/protected-route"
 import { Button } from "@/components/ui/button"
@@ -31,27 +31,15 @@ import {
   Download,
   Upload
 } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { useAssociations } from "@/hooks/use-associations"
+import { LogoUpload } from "@/components/logo-upload"
+import { Loader2 } from "lucide-react"
 import UserManagement from "@/components/user-management"
-
-// Association data structure
-interface Association {
-  id: string
-  name: string
-  shortName: string
-  address: string
-  contactPerson: string
-  phone: string
-  email: string
-  website: string
-  registrationNumber: string
-  taxId: string
-  duesAmount: number
-  duesFrequency: "monthly" | "quarterly" | "annually"
-  cropYear: string
-  status: "active" | "inactive"
-  memberCount: number
-  createdAt: string
-}
+import { Association } from "@/lib/database"
+import { ProfileSettingsDialog } from "@/components/profile-settings-dialog"
+import { useProfileDialog } from "@/hooks/use-profile-dialog"
 
 // Sugar Mill data structure
 interface SugarMill {
@@ -281,63 +269,7 @@ const sugarMills: SugarMill[] = [
   }
 ]
 
-// Mock data for associations
-const associations: Association[] = [
-  {
-    id: "ASSO-001",
-    name: "Negros Oriental Sugar Planters Association",
-    shortName: "NOSPA",
-    address: "123 Sugar Avenue, Dumaguete City, Negros Oriental",
-    contactPerson: "Juan Dela Cruz",
-    phone: "+63 35 123 4567",
-    email: "info@nospa.org.ph",
-    website: "www.nospa.org.ph",
-    registrationNumber: "SEC-2024-001234",
-    taxId: "123-456-789-000",
-    duesAmount: 5000,
-    duesFrequency: "annually",
-    cropYear: "2024-2025",
-    status: "active",
-    memberCount: 1250,
-    createdAt: "2024-01-15"
-  },
-  {
-    id: "ASSO-002",
-    name: "Bayawan Sugar Farmers Cooperative",
-    shortName: "BASUCO",
-    address: "456 Cooperative Street, Bayawan City, Negros Oriental",
-    contactPerson: "Maria Santos",
-    phone: "+63 35 234 5678",
-    email: "contact@basuco.org.ph",
-    website: "www.basuco.org.ph",
-    registrationNumber: "SEC-2024-002345",
-    taxId: "234-567-890-000",
-    duesAmount: 3500,
-    duesFrequency: "quarterly",
-    cropYear: "2024-2025",
-    status: "active",
-    memberCount: 890,
-    createdAt: "2024-01-20"
-  },
-  {
-    id: "ASSO-003",
-    name: "Mabinay Sugar Planters Union",
-    shortName: "MASPU",
-    address: "789 Union Road, Mabinay, Negros Oriental",
-    contactPerson: "Pedro Reyes",
-    phone: "+63 35 345 6789",
-    email: "info@maspu.org.ph",
-    website: "www.maspu.org.ph",
-    registrationNumber: "SEC-2024-003456",
-    taxId: "345-678-901-000",
-    duesAmount: 4000,
-    duesFrequency: "annually",
-    cropYear: "2024-2025",
-    status: "active",
-    memberCount: 650,
-    createdAt: "2024-02-01"
-  }
-]
+// Mock data removed - now using real database data via useAssociations hook
 
 // Mock data for planter memberships
 const planterMemberships: PlanterMembership[] = [
@@ -393,15 +325,54 @@ const planterMemberships: PlanterMembership[] = [
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general")
-  const [selectedAssociation, setSelectedAssociation] = useState<Association | null>(null)
+  const [selectedAssociation, setSelectedAssociation] = useState<any>(null)
+  const { isOpen: isProfileDialogOpen, openDialog: openProfileDialog, closeDialog: closeProfileDialog } = useProfileDialog()
   const [selectedSugarMill, setSelectedSugarMill] = useState<SugarMill | null>(null)
   const [showAddAssociation, setShowAddAssociation] = useState(false)
+  const [showEditAssociation, setShowEditAssociation] = useState(false)
+  const [showDeleteAssociation, setShowDeleteAssociation] = useState(false)
   const [showAddSugarMill, setShowAddSugarMill] = useState(false)
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
   const [sugarMillSearchQuery, setSugarMillSearchQuery] = useState("")
   const [sugarMillFilterStatus, setSugarMillFilterStatus] = useState("all")
+  const [formData, setFormData] = useState({
+    name: "",
+    short_name: "",
+    address: "",
+    contact_person: "",
+    phone: "",
+    contact_email: "",
+    website: "",
+    logo_url: "",
+    registration_number: "",
+    tax_id: "",
+    dues_amount: 0,
+    dues_frequency: "annually" as "monthly" | "quarterly" | "annually",
+    crop_year: "2024-2025",
+    status: "active" as "active" | "inactive",
+    member_count: 0
+  })
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+
+  // Use the associations hook for database integration
+  const {
+    associations: associationsData,
+    loading: associationsLoading,
+    creating,
+    updating,
+    deleting,
+    error: associationsError,
+    validationErrors,
+    createAssociation,
+    updateAssociation,
+    deleteAssociation,
+    clearError,
+    clearValidationErrors
+  } = useAssociations()
+
+  // Component is now using real database data via useAssociations hook
 
   const getDuesStatusBadge = (status: string) => {
     switch (status) {
@@ -436,6 +407,150 @@ export default function SettingsPage() {
         return <Badge className="bg-blue-100 text-blue-800">Seasonal</Badge>
       default:
         return <Badge variant="secondary">{status}</Badge>
+    }
+  }
+
+  // CRUD Operations for Associations
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      short_name: "",
+      address: "",
+      contact_person: "",
+      phone: "",
+      contact_email: "",
+      website: "",
+      logo_url: "",
+      registration_number: "",
+      tax_id: "",
+      dues_amount: 0,
+      dues_frequency: "annually",
+      crop_year: "2024-2025",
+      status: "active",
+      member_count: 0
+    })
+    setLogoFile(null)
+    clearValidationErrors()
+    clearError()
+  }
+
+  const handleAddAssociation = () => {
+    resetForm()
+    setSelectedAssociation(null)
+    setShowAddAssociation(true)
+  }
+
+  const handleEditAssociation = (association: any) => {
+    setFormData({
+      name: association.name || "",
+      short_name: association.short_name || "",
+      address: association.address || "",
+      contact_person: association.contact_person || "",
+      phone: association.phone || "",
+      contact_email: association.contact_email || "",
+      website: association.website || "",
+      logo_url: association.logo_url || "",
+      registration_number: association.registration_number || "",
+      tax_id: association.tax_id || "",
+      dues_amount: association.dues_amount || 0,
+      dues_frequency: association.dues_frequency || "annually",
+      crop_year: association.crop_year || "2024-2025",
+      status: association.status || "active",
+      member_count: association.member_count || 0
+    })
+    setLogoFile(null)
+    setSelectedAssociation(association)
+    setShowEditAssociation(true)
+  }
+
+  const handleDeleteAssociation = (association: any) => {
+    setSelectedAssociation(association)
+    setShowDeleteAssociation(true)
+  }
+
+  const submitAssociation = async () => {
+    try {
+      let logoUrl = formData.logo_url
+
+      // Upload logo if a new file is selected
+      if (logoFile) {
+        const logoFormData = new FormData()
+        logoFormData.append('logo', logoFile)
+
+        const uploadResponse = await fetch('/api/upload/association-logo', {
+          method: 'POST',
+          body: logoFormData
+        })
+
+        const uploadResult = await uploadResponse.json()
+        if (uploadResult.success) {
+          logoUrl = uploadResult.data.url
+        } else {
+          throw new Error(uploadResult.error || 'Failed to upload logo')
+        }
+      }
+
+      const submissionData = {
+        ...formData,
+        logo_url: logoUrl
+      }
+
+      if (selectedAssociation) {
+        // Edit existing association
+        const result = await updateAssociation({ 
+          id: selectedAssociation.id,
+          ...submissionData 
+        })
+        if (result) {
+          setShowEditAssociation(false)
+          resetForm()
+          setSelectedAssociation(null)
+        }
+      } else {
+        // Add new association
+        const result = await createAssociation(submissionData)
+        if (result) {
+          setShowAddAssociation(false)
+          resetForm()
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting association:', error)
+    }
+  }
+
+  const handleLogoChange = (logoUrl: string | null, file: File | null) => {
+    setLogoFile(file)
+    if (logoUrl && !file) {
+      // User is setting existing URL
+      setFormData(prev => ({ ...prev, logo_url: logoUrl }))
+    } else if (file) {
+      // User selected new file
+      setFormData(prev => ({ ...prev, logo_url: "" })) // Will be set after upload
+    } else {
+      // User removed logo
+      setFormData(prev => ({ ...prev, logo_url: "" }))
+    }
+  }
+
+  const confirmDeleteAssociation = async () => {
+    if (selectedAssociation) {
+      const success = await deleteAssociation(selectedAssociation.id)
+      if (success) {
+        setShowDeleteAssociation(false)
+        setSelectedAssociation(null)
+      }
+    }
+  }
+
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+    // Clear validation error for this field
+    if (validationErrors[field]) {
+      clearValidationErrors()
     }
   }
 
@@ -868,79 +983,431 @@ export default function SettingsPage() {
                 <h3 className="text-lg font-semibold">Sugar Farmers Associations</h3>
                 <p className="text-sm text-gray-600">Manage sugar farmers associations and their details</p>
               </div>
-              <Button onClick={() => setShowAddAssociation(true)}>
+              <Button onClick={handleAddAssociation}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Association
               </Button>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-              {associations.map((association) => (
-                <Card key={association.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <CardTitle className="text-lg">{association.shortName}</CardTitle>
-                          <CardDescription>{association.name}</CardDescription>
+            {/* Loading State */}
+            {associationsLoading && (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                <span className="ml-2 text-gray-600">Loading associations...</span>
+              </div>
+            )}
+
+            {/* Error State */}
+            {associationsError && (
+              <div className="rounded-md border border-red-200 bg-red-50 p-4">
+                <div className="flex">
+                  <AlertTriangle className="h-5 w-5 text-red-400" />
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">Error loading associations</h3>
+                    <p className="mt-1 text-sm text-red-700">{associationsError}</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2" 
+                      onClick={clearError}
+                    >
+                      Dismiss
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Associations Grid */}
+            {!associationsLoading && !associationsError && (
+              <div className="grid gap-4 md:grid-cols-3">
+                {associationsData.length === 0 ? (
+                  <div className="col-span-3 text-center py-8">
+                    <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No associations found</h3>
+                    <p className="text-gray-600 mb-4">Get started by adding your first sugar farmers association.</p>
+                    <Button onClick={handleAddAssociation}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add First Association
+                    </Button>
+                  </div>
+                ) : (
+                  associationsData.map((association) => (
+                    <Card key={association.id} className="hover:shadow-md transition-shadow">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {association.logo_url ? (
+                              <div className="w-10 h-10 rounded-lg border border-gray-200 overflow-hidden bg-gray-50 flex-shrink-0">
+                                <img
+                                  src={association.logo_url}
+                                  alt={`${association.name} logo`}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.currentTarget as HTMLImageElement
+                                    const fallback = target.nextElementSibling as HTMLElement
+                                    target.style.display = 'none'
+                                    if (fallback) fallback.style.display = 'flex'
+                                  }}
+                                />
+                                <div className="w-full h-full bg-gray-100 items-center justify-center hidden">
+                                  <Building2 className="h-5 w-5 text-gray-400" />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                <Building2 className="h-5 w-5 text-blue-600" />
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <CardTitle className="text-lg truncate">{association.short_name || association.name}</CardTitle>
+                              <CardDescription className="line-clamp-1">{association.name}</CardDescription>
+                            </div>
+                          </div>
+                          <Badge variant={association.status === "active" ? "default" : "secondary"}>
+                            {association.status}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="space-y-2">
+                          {association.address && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <MapPin className="h-4 w-4 text-gray-500" />
+                              <span className="text-gray-700 line-clamp-1">{association.address}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-sm">
+                            <Users className="h-4 w-4 text-gray-500" />
+                            <span className="text-gray-700">{association.member_count || 0} members</span>
+                          </div>
+                          {association.phone && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Phone className="h-4 w-4 text-gray-500" />
+                              <span className="text-gray-700">{association.phone}</span>
+                            </div>
+                          )}
+                          {association.contact_email && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Mail className="h-4 w-4 text-gray-500" />
+                              <span className="text-gray-700 line-clamp-1">{association.contact_email}</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="border-t pt-3">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-600">Association Dues:</span>
+                            <span className="font-semibold">₱{(association.dues_amount || 0).toLocaleString()}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-600">Frequency:</span>
+                            <span className="capitalize">{association.dues_frequency || 'annually'}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-600">Crop Year:</span>
+                            <span>{association.crop_year_label || association.crop_year || '2024-2025'}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1" 
+                          onClick={() => handleEditAssociation(association)}
+                          disabled={updating}
+                        >
+                          {updating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Edit className="h-4 w-4 mr-2" />}
+                          Edit
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex-1">
+                          <Users className="h-4 w-4 mr-2" />
+                          Members
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-red-600 hover:text-red-700" 
+                          onClick={() => handleDeleteAssociation(association)}
+                          disabled={deleting}
+                        >
+                          {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* Add/Edit Association Modal */}
+            <Dialog open={showAddAssociation || showEditAssociation} onOpenChange={(open) => {
+              if (!open) {
+                setShowAddAssociation(false)
+                setShowEditAssociation(false)
+                resetForm()
+                setSelectedAssociation(null)
+              }
+            }}>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-blue-600" />
+                    {selectedAssociation ? "Edit Association" : "Add New Association"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {selectedAssociation ? "Update association information and settings." : "Enter the details for the new sugar farmers association."}
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="grid gap-4 py-4">
+                  {/* Logo Upload Section */}
+                  <div className="border-b pb-4">
+                    <LogoUpload
+                      currentLogoUrl={formData.logo_url}
+                      onLogoChange={handleLogoChange}
+                      entityName="Association"
+                      disabled={creating || updating}
+                    />
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="association-name">Association Name</Label>
+                      <Input 
+                        id="association-name"
+                        placeholder="Enter full association name"
+                        value={formData.name}
+                        onChange={(e) => handleInputChange("name", e.target.value)}
+                        className={validationErrors.name ? "border-red-500" : ""}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="association-shortname">Short Name / Acronym</Label>
+                      <Input 
+                        id="association-shortname"
+                        placeholder="e.g., NOSPA, BASUCO"
+                        value={formData.short_name}
+                        onChange={(e) => handleInputChange("short_name", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="association-address">Complete Address</Label>
+                    <Textarea 
+                      id="association-address"
+                      placeholder="Enter complete address"
+                      value={formData.address}
+                      onChange={(e) => handleInputChange("address", e.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="contact-person">Contact Person</Label>
+                      <Input 
+                        id="contact-person"
+                        placeholder="Full name of contact person"
+                        value={formData.contact_person}
+                        onChange={(e) => handleInputChange("contact_person", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input 
+                        id="phone"
+                        placeholder="+63 35 123 4567"
+                        value={formData.phone}
+                        onChange={(e) => handleInputChange("phone", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input 
+                        id="email"
+                        type="email"
+                        placeholder="contact@association.org"
+                        value={formData.contact_email}
+                        onChange={(e) => handleInputChange("contact_email", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="website">Website</Label>
+                      <Input 
+                        id="website"
+                        placeholder="www.association.org"
+                        value={formData.website}
+                        onChange={(e) => handleInputChange("website", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="registration-number">Registration Number</Label>
+                      <Input 
+                        id="registration-number"
+                        placeholder="SEC-2024-001234"
+                        value={formData.registration_number}
+                        onChange={(e) => handleInputChange("registration_number", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tax-id">Tax ID / TIN</Label>
+                      <Input 
+                        id="tax-id"
+                        placeholder="123-456-789-000"
+                        value={formData.tax_id}
+                        onChange={(e) => handleInputChange("tax_id", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="dues-amount">Association Dues (₱)</Label>
+                      <Input 
+                        id="dues-amount"
+                        type="number"
+                        placeholder="5000"
+                        value={formData.dues_amount}
+                        onChange={(e) => handleInputChange("dues_amount", parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="dues-frequency">Dues Frequency</Label>
+                      <Select value={formData.dues_frequency} onValueChange={(value) => handleInputChange("dues_frequency", value)}>
+                        <SelectTrigger id="dues-frequency">
+                          <SelectValue placeholder="Select frequency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                          <SelectItem value="quarterly">Quarterly</SelectItem>
+                          <SelectItem value="annually">Annually</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="member-count">Member Count</Label>
+                      <Input 
+                        id="member-count"
+                        type="number"
+                        placeholder="0"
+                        value={formData.member_count}
+                        onChange={(e) => handleInputChange("member_count", parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="crop-year">Crop Year</Label>
+                      <Select value={formData.crop_year} onValueChange={(value) => handleInputChange("crop_year", value)}>
+                        <SelectTrigger id="crop-year">
+                          <SelectValue placeholder="Select crop year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2024-2025">2024-2025</SelectItem>
+                          <SelectItem value="2025-2026">2025-2026</SelectItem>
+                          <SelectItem value="2023-2024">2023-2024</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="status">Status</Label>
+                      <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
+                        <SelectTrigger id="status">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Validation Errors */}
+                {Object.keys(validationErrors).length > 0 && (
+                  <div className="rounded-md border border-red-200 bg-red-50 p-3">
+                    <div className="flex">
+                      <AlertTriangle className="h-5 w-5 text-red-400" />
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-red-800">Please fix the following errors:</h3>
+                        <div className="mt-2 text-sm text-red-700">
+                          <ul className="space-y-1">
+                            {Object.entries(validationErrors).map(([field, message]) => (
+                              <li key={field}>• {message}</li>
+                            ))}
+                          </ul>
                         </div>
                       </div>
-                      <Badge variant={association.status === "active" ? "default" : "secondary"}>
-                        {association.status}
-                      </Badge>
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <MapPin className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-700">{association.address}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Users className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-700">{association.memberCount} members</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-700">{association.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-700">{association.email}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="border-t pt-3">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Association Dues:</span>
-                        <span className="font-semibold">₱{association.duesAmount.toLocaleString()}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Frequency:</span>
-                        <span className="capitalize">{association.duesFrequency}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Crop Year:</span>
-                        <span>{association.cropYear}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Users className="h-4 w-4 mr-2" />
-                      Members
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+                  </div>
+                )}
 
-            {/* Association Details Modal would go here */}
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => {
+                    setShowAddAssociation(false)
+                    setShowEditAssociation(false)
+                    resetForm()
+                    setSelectedAssociation(null)
+                  }}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={submitAssociation} 
+                    className="bg-blue-600 hover:bg-blue-700"
+                    disabled={creating || updating}
+                  >
+                    {creating || updating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        {selectedAssociation ? "Updating..." : "Creating..."}
+                      </>
+                    ) : (
+                      selectedAssociation ? "Update Association" : "Add Association"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Modal */}
+            <AlertDialog open={showDeleteAssociation} onOpenChange={setShowDeleteAssociation}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                    Delete Association
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete <strong>{selectedAssociation?.name}</strong>? 
+                    This action cannot be undone and will remove all association data including member records.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => {
+                    setShowDeleteAssociation(false)
+                    setSelectedAssociation(null)
+                  }}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={confirmDeleteAssociation}
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    Delete Association
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </TabsContent>
 
           {/* Memberships Management Tab */}
@@ -1131,6 +1598,12 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Profile Settings Dialog */}
+      <ProfileSettingsDialog 
+        open={isProfileDialogOpen} 
+        onOpenChange={closeProfileDialog} 
+      />
     </DashboardLayout>
     </ProtectedRoute>
   )

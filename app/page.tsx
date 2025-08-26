@@ -16,6 +16,7 @@ import { HeroSection } from "@/components/hero-section"
 import { ServicesSection } from "@/components/services-section"
 import { Footer } from "@/components/footer"
 import { DollarSign, Shield } from "lucide-react"
+import { useCallback } from "react"
 
 const roleOptions = [
   { id: "admin", label: "Administrator" },
@@ -33,6 +34,7 @@ export default function LandingPage() {
 
   const [loginOpen, setLoginOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [dbStatus, setDbStatus] = useState<null | { ok: boolean; message: string }>(null)
   const [formData, setFormData] = useState({ email: "", password: "", role: "" })
 
   useEffect(() => {
@@ -59,12 +61,37 @@ export default function LandingPage() {
     }
   }
 
+  const handleTestDb = useCallback(async () => {
+    setDbStatus(null)
+    try {
+      const res = await fetch("/api/test-db", { method: "POST" })
+      const data = await res.json()
+      if (res.ok && data?.ok) {
+        setDbStatus({ ok: true, message: "Database connection successful" })
+      } else {
+        setDbStatus({ ok: false, message: data?.error || "Connection failed" })
+      }
+    } catch (err: any) {
+      setDbStatus({ ok: false, message: err?.message || "Connection failed" })
+    }
+  }, [])
+
   // Landing kept minimal: Hero, Services, Prices, Contact, Footer
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <HeroSection />
+
+      {/* Utilities */}
+      <section className="border-t bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-6 flex items-center gap-3">
+          <Button variant="outline" onClick={handleTestDb}>Test DB</Button>
+          {dbStatus && (
+            <span className={"text-sm " + (dbStatus.ok ? "text-green-700" : "text-red-700")}>{dbStatus.message}</span>
+          )}
+        </div>
+      </section>
 
       {/* Removed About for simpler landing */}
 

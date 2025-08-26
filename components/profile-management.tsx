@@ -12,6 +12,8 @@ import {
   Edit3,
   HelpCircle
 } from "lucide-react"
+import { ProfileSettingsDialog } from "@/components/profile-settings-dialog"
+import { useProfileDialog } from "@/hooks/use-profile-dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -40,13 +42,25 @@ interface UserProfile {
 export function ProfileManagement() {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const { user, isAuthenticated, logout } = useAuth()
+  const { isOpen: isProfileDialogOpen, openDialog: openProfileDialog, closeDialog: closeProfileDialog } = useProfileDialog()
 
   const handleLogout = () => {
     logout()
   }
 
+  const handleEditProfile = () => {
+    setIsProfileOpen(false) // Close dropdown
+    openProfileDialog() // Open profile dialog
+  }
+
+  const handleSettings = () => {
+    setIsProfileOpen(false) // Close dropdown
+    openProfileDialog() // Open profile dialog
+  }
+
   return (
-    <DropdownMenu open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+    <>
+      <DropdownMenu open={isProfileOpen} onOpenChange={setIsProfileOpen}>
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
@@ -96,7 +110,7 @@ export function ProfileManagement() {
             </Link>
           </DropdownMenuItem>
           
-          <DropdownMenuItem className="px-4 py-2">
+          <DropdownMenuItem className="px-4 py-2" onSelect={handleSettings}>
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
           </DropdownMenuItem>
@@ -118,7 +132,7 @@ export function ProfileManagement() {
             Account
           </DropdownMenuLabel>
           
-          <DropdownMenuItem className="px-4 py-2">
+          <DropdownMenuItem className="px-4 py-2" onSelect={handleEditProfile}>
             <Edit3 className="mr-2 h-4 w-4" />
             <span>Edit Profile</span>
           </DropdownMenuItem>
@@ -146,5 +160,12 @@ export function ProfileManagement() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+
+    {/* Profile Settings Dialog */}
+    <ProfileSettingsDialog 
+      open={isProfileDialogOpen} 
+      onOpenChange={closeProfileDialog} 
+    />
+    </>
   )
 }

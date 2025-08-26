@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 import { MessagingSystem } from "@/components/messaging-system"
 import { ProfileManagement } from "@/components/profile-management"
+import { DatabaseTestButton } from "@/components/database-test-button"
 import {
   BarChart3,
   ChevronRight,
@@ -449,6 +450,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
             {/* Right side - Search and Actions */}
             <div className="flex items-center gap-2">
+              {/* Mobile Database Test Button */}
+              <div className="md:hidden">
+                <DatabaseTestButton 
+                  variant="ghost" 
+                  size="icon" 
+                  showLabel={false}
+                  className="hover:bg-farm-green-600 text-white border-farm-green-500"
+                />
+              </div>
               {/* Search Bar */}
               {isClient && (
                 <div className="relative hidden md:block" ref={searchRef}>
@@ -499,6 +509,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <MessageSquare className="h-5 w-5" />
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-blue-500 text-white flex items-center justify-center font-medium">5</Badge>
               </Button>
+              {/* Desktop Database Test Button */}
+              <div className="hidden md:block">
+                <DatabaseTestButton 
+                  variant="ghost" 
+                  size="icon" 
+                  showLabel={false}
+                  className="hover:bg-farm-green-600 text-white border-farm-green-500"
+                />
+              </div>
               <ProfileManagement />
             </div>
           </div>
