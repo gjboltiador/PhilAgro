@@ -11,10 +11,11 @@ export interface UserProfile {
   profile_picture?: string
   avatar?: string
   id_type?: 'Driver_License' | 'TIN_ID' | 'Passport' | 'National_ID' | 'Others'
+  id_number?: string
   id_image?: string
   phone_number?: string
   address?: string
-  user_type: 'Association Member' | 'Unaffiliated' | 'Hauler' | 'Planter' | 'Supplier' | 'Tractor Operator' | 'Driver'
+  user_type: 'Association Member' | 'Unaffiliated' | 'Hauler' | 'Planter' | 'Supplier' | 'Tractor Operator' | 'Driver' | 'Administrator'
   association_id?: number
   status: 'Active' | 'Inactive'
   created_at: Date
@@ -34,10 +35,11 @@ export interface CreateUserProfileRequest {
   profile_picture?: string
   avatar?: string
   id_type?: 'Driver_License' | 'TIN_ID' | 'Passport' | 'National_ID' | 'Others'
+  id_number?: string
   id_image?: string
   phone_number?: string
   address?: string
-  user_type?: 'Association Member' | 'Unaffiliated' | 'Hauler' | 'Planter' | 'Supplier' | 'Tractor Operator' | 'Driver'
+  user_type?: 'Association Member' | 'Unaffiliated' | 'Hauler' | 'Planter' | 'Supplier' | 'Tractor Operator' | 'Driver' | 'Administrator'
   association_id?: number
   status?: 'Active' | 'Inactive'
 }
@@ -51,10 +53,11 @@ export interface UpdateUserProfileRequest {
   profile_picture?: string
   avatar?: string
   id_type?: 'Driver_License' | 'TIN_ID' | 'Passport' | 'National_ID' | 'Others'
+  id_number?: string
   id_image?: string
   phone_number?: string
   address?: string
-  user_type?: 'Association Member' | 'Unaffiliated' | 'Hauler' | 'Planter' | 'Supplier' | 'Tractor Operator' | 'Driver'
+  user_type?: 'Association Member' | 'Unaffiliated' | 'Hauler' | 'Planter' | 'Supplier' | 'Tractor Operator' | 'Driver' | 'Administrator'
   association_id?: number
   status?: 'Active' | 'Inactive'
 }
@@ -87,6 +90,7 @@ class UserProfilesDAO {
         up.profile_picture,
         up.avatar,
         up.id_type,
+        up.id_number,
         up.id_image,
         up.phone_number,
         up.address,
@@ -153,6 +157,7 @@ class UserProfilesDAO {
         up.profile_picture,
         up.avatar,
         up.id_type,
+        up.id_number,
         up.id_image,
         up.phone_number,
         up.address,
@@ -191,6 +196,7 @@ class UserProfilesDAO {
         up.profile_picture,
         up.avatar,
         up.id_type,
+        up.id_number,
         up.id_image,
         up.phone_number,
         up.address,
@@ -240,9 +246,9 @@ class UserProfilesDAO {
     const sql = `
       INSERT INTO user_profiles (
         first_name, middle_name, last_name, email, password_hash,
-        profile_picture, avatar, id_type, id_image, phone_number, address,
+        profile_picture, avatar, id_type, id_number, id_image, phone_number, address,
         user_type, association_id, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
 
     const params = [
@@ -254,6 +260,7 @@ class UserProfilesDAO {
       data.profile_picture || 'default_profile.png',
       data.avatar || 'default_avatar.png',
       data.id_type || 'Others',
+      data.id_number?.trim() || null,
       data.id_image || null,
       data.phone_number?.trim() || null,
       data.address?.trim() || null,

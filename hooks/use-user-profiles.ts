@@ -29,6 +29,8 @@ export interface UseUserProfilesReturn {
   // Actions
   fetchUserProfiles: (filters?: UserProfileFilters) => Promise<void>
   fetchUserProfile: (userId: number) => Promise<UserProfile | null>
+  fetchUserProfileByEmail: (email: string) => Promise<UserProfile | null>
+  createUserProfile: (data: CreateUserProfileRequest) => Promise<UserProfile | null>
   updateUserProfile: (data: UpdateUserProfileRequest) => Promise<UserProfile | null>
   changePassword: (userId: number, currentPassword: string, newPassword: string) => Promise<boolean>
   
@@ -103,6 +105,88 @@ export function useUserProfiles(): UseUserProfilesReturn {
       return null
     } finally {
       setLoading(false)
+    }
+  }, [])
+
+  /**
+   * Fetch single user profile by email
+   */
+  const fetchUserProfileByEmail = useCallback(async (email: string): Promise<UserProfile | null> => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      // Use search filter to find user by email
+      const response = await fetch(`/api/user-profiles?search=${encodeURIComponent(email)}`)
+      const result = await response.json()
+      
+      if (!result.success) {
+        if (response.status === 404) {
+          // User not found is not an error in this context
+          return null
+        }
+        throw new Error(result.message || 'Failed to fetch user profile')
+      }
+      
+      // Find exact email match from search results
+      const profiles = result.data
+      const exactMatch = profiles.find((profile: UserProfile) => 
+        profile.email.toLowerCase() === email.toLowerCase()
+      )
+      
+      if (exactMatch) {
+        setCurrentProfile(exactMatch)
+        return exactMatch
+      }
+      return null
+      
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch user profile')
+      console.error('Error fetching user profile by email:', err)
+      return null
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  /**
+   * Create new user profile
+   */
+  const createUserProfile = useCallback(async (data: CreateUserProfileRequest): Promise<UserProfile | null> => {
+    setSaving(true)
+    setError(null)
+    setValidationErrors({})
+    
+    try {
+      const response = await fetch('/api/user-profiles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      
+      const result = await response.json()
+      
+      if (!result.success) {
+        if (result.validationErrors) {
+          setValidationErrors(result.validationErrors)
+        }
+        throw new Error(result.message || 'Failed to create profile')
+      }
+      
+      const newProfile = result.data
+      setCurrentProfile(newProfile)
+      
+      // Update the profiles list if it's loaded
+      setUserProfiles(prev => [...prev, newProfile])
+      
+      return newProfile
+      
+    } catch (err: any) {
+      setError(err.message || 'Failed to create user profile')
+      console.error('Error creating user profile:', err)
+      return null
+    } finally {
+      setSaving(false)
     }
   }, [])
 
@@ -262,6 +346,8 @@ export function useUserProfiles(): UseUserProfilesReturn {
     // Actions
     fetchUserProfiles,
     fetchUserProfile,
+    fetchUserProfileByEmail,
+    createUserProfile,
     updateUserProfile,
     changePassword,
     

@@ -1,13 +1,21 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { Wheat } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LoginModal } from "@/components/login-modal"
 
 export function Header() {
   const [loginOpen, setLoginOpen] = useState(false)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    if (searchParams?.get("login") === "1") {
+      setLoginOpen(true)
+    }
+  }, [searchParams])
 
   return (
     <>

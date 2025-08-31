@@ -17,16 +17,36 @@ interface LoginModalProps {
 
 export function LoginModal({ open, onOpenChange }: LoginModalProps) {
   const [showPassword, setShowPassword] = useState(false)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [role, setRole] = useState("")
+  const [email, setEmail] = useState("test_responder@gmail.com")
+  const [password, setPassword] = useState("••••••••••")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email || !password || !role) return
-    await login(email, password, role)
-    onOpenChange(false)
+    setError("")
+    
+    // Validate required fields
+    if (!email || !password) {
+      setError("Email and password are required")
+      return
+    }
+
+    setIsLoading(true)
+    
+    try {
+      // Role will be automatically determined from user profile
+      await login(email, password, "")
+      onOpenChange(false)
+      // Reset form
+      setEmail("")
+      setPassword("")
+    } catch (error: any) {
+      setError(error.message || "Login failed. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -34,9 +54,15 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">Member Login</DialogTitle>
-          <DialogDescription className="text-center">Access your farmer association account</DialogDescription>
+          <DialogDescription className="text-center">Sign in to access your dashboard and tools</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -45,6 +71,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
               required
             />
           </div>
@@ -57,6 +84,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
                 required
               />
               <Button
@@ -65,29 +93,21 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
                 size="sm"
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => setShowPassword(!showPassword)}
+                disabled={isLoading}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Role</Label>
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Administrator</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="operator">Operator</SelectItem>
-                <SelectItem value="planner">Planner</SelectItem>
-                <SelectItem value="analyst">Analyst</SelectItem>
-                <SelectItem value="viewer">Viewer</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button type="submit" className="w-full">
-            Sign In
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Signing In...
+              </>
+            ) : (
+              "Sign In"
+            )}
           </Button>
         </form>
       </DialogContent>

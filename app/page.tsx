@@ -8,58 +8,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/contexts/auth-context"
 import { Header } from "@/components/header"
 import { HeroSection } from "@/components/hero-section"
 import { ServicesSection } from "@/components/services-section"
 import { Footer } from "@/components/footer"
-import { DollarSign, Shield } from "lucide-react"
+import { DollarSign } from "lucide-react"
 import { useCallback } from "react"
-
-const roleOptions = [
-  { id: "admin", label: "Administrator" },
-  { id: "manager", label: "Manager" },
-  { id: "operator", label: "Operator" },
-  { id: "planner", label: "Planner" },
-  { id: "analyst", label: "Analyst" },
-  { id: "viewer", label: "Viewer" },
-]
 
 export default function LandingPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { login, isAuthenticated } = useAuth()
+  const { isAuthenticated } = useAuth()
 
-  const [loginOpen, setLoginOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [dbStatus, setDbStatus] = useState<null | { ok: boolean; message: string }>(null)
-  const [formData, setFormData] = useState({ email: "", password: "", role: "" })
-
-  useEffect(() => {
-    if (searchParams?.get("login") === "1") {
-      setLoginOpen(true)
-    }
-  }, [searchParams])
 
   useEffect(() => {
     if (isAuthenticated) {
       router.replace("/dashboard")
     }
   }, [isAuthenticated, router])
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formData.email || !formData.password || !formData.role) return
-    setIsLoading(true)
-    try {
-      await login(formData.email, formData.password, formData.role)
-      router.replace("/dashboard")
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleTestDb = useCallback(async () => {
     setDbStatus(null)
@@ -179,60 +147,6 @@ export default function LandingPage() {
           </Card>
         </div>
       </section>
-
-      {/* Login Dialog */}
-      <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-farm-green-900">
-              <Shield className="h-5 w-5 text-farm-green-700" /> Member Login
-            </DialogTitle>
-            <DialogDescription>Sign in to access your dashboard and tools</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Role</Label>
-              <Select value={formData.role} onValueChange={(v) => setFormData({ ...formData, role: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roleOptions.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>{r.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <DialogFooter>
-              <Button type="submit" className="w-full bg-farm-green-600 hover:bg-farm-green-700" disabled={isLoading}>
-                {isLoading ? "Signing In..." : "Sign In"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

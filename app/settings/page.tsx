@@ -36,7 +36,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useAssociations } from "@/hooks/use-associations"
 import { LogoUpload } from "@/components/logo-upload"
 import { Loader2 } from "lucide-react"
-import UserManagement from "@/components/user-management"
+import { UserManagementSimple } from "@/components/user-management-simple"
 import { Association } from "@/lib/database"
 import { ProfileSettingsDialog } from "@/components/profile-settings-dialog"
 import { useProfileDialog } from "@/hooks/use-profile-dialog"
@@ -1581,7 +1581,7 @@ export default function SettingsPage() {
                 <CardDescription>Manage system users and permissions</CardDescription>
               </CardHeader>
             </Card>
-            <UserManagement />
+            <UserManagementSimple />
           </TabsContent>
 
           {/* System Tab */}

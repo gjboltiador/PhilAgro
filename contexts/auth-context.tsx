@@ -22,8 +22,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Role permissions mapping
+// Role permissions mapping based on user_type from user_profiles table
 const rolePermissions: Record<string, string[]> = {
+  // Legacy roles (for backward compatibility)
   admin: [
     "all",
     "user_management",
@@ -71,6 +72,86 @@ const rolePermissions: Record<string, string[]> = {
     "basic_information",
     "price_lists",
     "news_updates"
+  ],
+  
+  // User types from user_profiles table
+  administrator: [
+    "all",
+    "user_management",
+    "system_configuration",
+    "reports_analytics",
+    "farm_management",
+    "equipment_management",
+    "production_reports",
+    "financial_management",
+    "price_management",
+    "communication_management",
+    "equipment_operation",
+    "field_work_tracking",
+    "maintenance_reports",
+    "time_tracking",
+    "basic_reports",
+    "view_reports",
+    "production_planning",
+    "scheduling",
+    "resource_allocation",
+    "progress_monitoring",
+    "data_analysis",
+    "report_generation",
+    "performance_metrics",
+    "trend_analysis",
+    "basic_information",
+    "price_lists",
+    "news_updates"
+  ],
+  association_member: [
+    "farm_management",
+    "production_reports",
+    "financial_management",
+    "price_management",
+    "communication_management",
+    "basic_reports",
+    "view_reports"
+  ],
+  unaffiliated: [
+    "basic_reports",
+    "view_reports",
+    "basic_information",
+    "price_lists",
+    "news_updates"
+  ],
+  hauler: [
+    "equipment_operation",
+    "field_work_tracking",
+    "maintenance_reports",
+    "time_tracking",
+    "basic_reports"
+  ],
+  planter: [
+    "production_planning",
+    "scheduling",
+    "resource_allocation",
+    "progress_monitoring",
+    "basic_reports"
+  ],
+  supplier: [
+    "financial_management",
+    "price_management",
+    "communication_management",
+    "basic_reports"
+  ],
+  tractor_operator: [
+    "equipment_operation",
+    "field_work_tracking",
+    "maintenance_reports",
+    "time_tracking",
+    "basic_reports"
+  ],
+  driver: [
+    "equipment_operation",
+    "field_work_tracking",
+    "time_tracking",
+    "basic_reports"
   ]
 }
 
@@ -98,24 +179,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsInitialized(true)
   }, [])
 
-  const login = async (email: string, password: string, role: string) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    const mockUser: User = {
-      id: "1",
-      email,
-      role,
-      name: email.split('@')[0],
-      permissions: rolePermissions[role] || []
+  const login = async (email: string, password: string, role: string = "") => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Login failed')
+      }
+
+      if (!result.success) {
+        throw new Error(result.message || 'Login failed')
+      }
+
+      const userData = result.data
+      
+      // Create user object with permissions
+      const user: User = {
+        id: userData.id.toString(),
+        email: userData.email,
+        role: userData.role,
+        name: userData.name,
+        permissions: rolePermissions[userData.role] || []
+      }
+      
+      // Store in localStorage for persistence
+      localStorage.setItem("userRole", userData.role)
+      localStorage.setItem("userEmail", userData.email)
+      localStorage.setItem("userId", userData.id.toString())
+      
+      setUser(user)
+      setIsAuthenticated(true)
+      
+    } catch (error: any) {
+      console.error('Login error:', error)
+      throw new Error(error.message || 'Login failed. Please try again.')
     }
-    
-    // Store in localStorage for persistence
-    localStorage.setItem("userRole", role)
-    localStorage.setItem("userEmail", email)
-    
-    setUser(mockUser)
-    setIsAuthenticated(true)
   }
 
   const logout = () => {

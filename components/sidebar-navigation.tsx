@@ -61,7 +61,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     if (pathname.startsWith('/prices')) return 'Sugar Prices'
     if (pathname.startsWith('/assistance/fertilizer')) return 'Farm Assistance • Fertilizer'
     
-    if (pathname.startsWith('/settings')) return 'Settings'
+    if (pathname.startsWith('/user-management')) return 'Settings • User Management'
+    if (pathname.startsWith('/settings')) return 'Settings • System Settings'
     return 'Dashboard'
   }
 
@@ -215,10 +216,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
     {
       title: "Settings",
-      href: "/settings",
       icon: Settings,
-      active: false,
-      requiredPermission: "system_configuration",
+      submenu: [
+        {
+          title: "User Management",
+          href: "/user-management",
+          active: false,
+          requiredPermission: "user_management",
+        },
+        {
+          title: "System Settings",
+          href: "/settings",
+          active: false,
+          requiredPermission: "system_configuration",
+        },
+      ],
     },
   ]
 
