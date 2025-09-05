@@ -54,6 +54,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     if (pathname.startsWith('/registration/planters')) return 'Registration • Planters'
     if (pathname.startsWith('/registration/farms')) return 'Registration • Farms'
     if (pathname.startsWith('/registration/haulers')) return 'Registration • Haulers'
+    
     if (pathname.startsWith('/equipment/trucks')) return 'Equipment • Trucks'
     if (pathname.startsWith('/equipment/tractors')) return 'Equipment • Tractors'
     if (pathname.startsWith('/equipment/calendar')) return 'Equipment • Calendar'
@@ -70,6 +71,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const searchItems = [
     { title: "Planters", href: "/registration/planters", category: "Registration" },
     { title: "Haulers", href: "/registration/haulers", category: "Registration" },
+    
     { title: "Trucks", href: "/equipment/trucks", category: "Equipment" },
     { title: "Tractors", href: "/equipment/tractors", category: "Equipment" },
     { title: "Other Equipment", href: "/equipment/other", category: "Equipment" },
@@ -137,6 +139,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           active: false,
           requiredPermission: "farm_management",
         },
+
       ],
     },
     {
@@ -218,12 +221,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       title: "Settings",
       icon: Settings,
       submenu: [
-        {
-          title: "User Management",
-          href: "/user-management",
-          active: false,
-          requiredPermission: "user_management",
-        },
         {
           title: "System Settings",
           href: "/settings",

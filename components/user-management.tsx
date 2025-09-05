@@ -1,4 +1,4 @@
-"use client"
+ "use client"
 
 import { useState, useEffect } from "react"
 import { Plus, Search, Edit, Trash2, Eye, UserPlus, Shield, Users, Filter } from "lucide-react"
@@ -610,7 +610,7 @@ export function UserManagement() {
                 <SelectContent>
                   <SelectItem value="">None (Unaffiliated)</SelectItem>
                   {associations.map((association) => (
-                    <SelectItem key={association.association_id} value={association.association_id.toString()}>
+                    <SelectItem key={association.association_id} value={association.association_id?.toString() || ""}>
                       {association.name}
                     </SelectItem>
                   ))}
@@ -752,7 +752,7 @@ export function UserManagement() {
                 <SelectContent>
                   <SelectItem value="">None (Unaffiliated)</SelectItem>
                   {associations.map((association) => (
-                    <SelectItem key={association.association_id} value={association.association_id.toString()}>
+                    <SelectItem key={association.association_id} value={association.association_id?.toString() || ""}>
                       {association.name}
                     </SelectItem>
                   ))}

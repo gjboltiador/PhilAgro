@@ -34,48 +34,17 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { useAssociations } from "@/hooks/use-associations"
+import { useSugarMills } from "@/hooks/use-sugar-mills"
+import { SugarMill, CreateSugarMillRequest, UpdateSugarMillRequest } from "@/lib/sugar-mills-dao"
 import { LogoUpload } from "@/components/logo-upload"
 import { Loader2 } from "lucide-react"
 import { UserManagementSimple } from "@/components/user-management-simple"
 import { Association } from "@/lib/database"
 import { ProfileSettingsDialog } from "@/components/profile-settings-dialog"
 import { useProfileDialog } from "@/hooks/use-profile-dialog"
+import { SugarMillForm } from "@/components/sugar-mill-form"
 
-// Sugar Mill data structure
-interface SugarMill {
-  id: string
-  plantCode: string
-  fullName: string
-  shortName: string
-  description: string
-  address: string
-  city: string
-  province: string
-  postalCode: string
-  contactPerson: string
-  phone: string
-  email: string
-  website: string
-  registrationNumber: string
-  taxId: string
-  capacity: number
-  capacityUnit: "tons" | "metric tons"
-  operatingStatus: "operational" | "maintenance" | "closed" | "seasonal"
-  cropYear: string
-  startDate: string
-  endDate: string
-  managerName: string
-  managerPhone: string
-  managerEmail: string
-  coordinates: {
-    latitude: number
-    longitude: number
-  }
-  facilities: string[]
-  certifications: string[]
-  createdAt: string
-  updatedAt: string
-}
+
 
 // Planter membership data structure
 interface PlanterMembership {
@@ -95,179 +64,7 @@ interface PlanterMembership {
   transferRestrictionReason: string
 }
 
-// Mock data for sugar mills
-const sugarMills: SugarMill[] = [
-  {
-    id: "MILL-001",
-    plantCode: "URSUMCO",
-    fullName: "United Robina Sugar Milling Corporation",
-    shortName: "URSUMCO",
-    description: "A leading sugar milling company in Negros Oriental, specializing in high-quality sugar production with state-of-the-art processing facilities.",
-    address: "Sugar Mill Complex, Barangay Tubod",
-    city: "Dumaguete City",
-    province: "Negros Oriental",
-    postalCode: "6200",
-    contactPerson: "Engr. Roberto Santos",
-    phone: "+63 35 123 4567",
-    email: "info@ursumco.com.ph",
-    website: "www.ursumco.com.ph",
-    registrationNumber: "SEC-2024-001234",
-    taxId: "123-456-789-000",
-    capacity: 8000,
-    capacityUnit: "tons",
-    operatingStatus: "operational",
-    cropYear: "2024-2025",
-    startDate: "2024-09-01",
-    endDate: "2025-05-31",
-    managerName: "Engr. Roberto Santos",
-    managerPhone: "+63 35 123 4567",
-    managerEmail: "roberto.santos@ursumco.com.ph",
-    coordinates: {
-      latitude: 9.3077,
-      longitude: 123.3054
-    },
-    facilities: ["Sugar Processing", "Molasses Storage", "Quality Control Lab", "Warehouse", "Loading Bay"],
-    certifications: ["ISO 9001:2015", "HACCP", "GMP", "Organic Certification"],
-    createdAt: "2024-01-15",
-    updatedAt: "2024-01-15"
-  },
-  {
-    id: "MILL-002",
-    plantCode: "SONEDCO",
-    fullName: "Southern Negros Development Corporation",
-    shortName: "SONEDCO",
-    description: "Premier sugar milling facility serving the southern region of Negros Oriental with advanced processing technology.",
-    address: "Industrial Zone, Barangay Poblacion",
-    city: "Bayawan City",
-    province: "Negros Oriental",
-    postalCode: "6221",
-    contactPerson: "Ms. Maria Garcia",
-    phone: "+63 35 234 5678",
-    email: "contact@sonedco.com.ph",
-    website: "www.sonedco.com.ph",
-    registrationNumber: "SEC-2024-002345",
-    taxId: "234-567-890-000",
-    capacity: 6500,
-    capacityUnit: "tons",
-    operatingStatus: "operational",
-    cropYear: "2024-2025",
-    startDate: "2024-09-01",
-    endDate: "2025-05-31",
-    managerName: "Ms. Maria Garcia",
-    managerPhone: "+63 35 234 5678",
-    managerEmail: "maria.garcia@sonedco.com.ph",
-    coordinates: {
-      latitude: 9.3644,
-      longitude: 122.8044
-    },
-    facilities: ["Sugar Processing", "Molasses Storage", "Quality Control Lab", "Warehouse", "Loading Bay", "Research Lab"],
-    certifications: ["ISO 9001:2015", "HACCP", "GMP", "Fair Trade Certified"],
-    createdAt: "2024-01-20",
-    updatedAt: "2024-01-20"
-  },
-  {
-    id: "MILL-003",
-    plantCode: "TOLONG",
-    fullName: "Tolong Sugar Milling Company",
-    shortName: "TOLONG",
-    description: "Established sugar mill serving the central region with reliable processing and quality assurance.",
-    address: "Sugar Mill Road, Barangay Central",
-    city: "Tolong",
-    province: "Negros Oriental",
-    postalCode: "6210",
-    contactPerson: "Mr. Pedro Reyes",
-    phone: "+63 35 345 6789",
-    email: "info@tolong.com.ph",
-    website: "www.tolong.com.ph",
-    registrationNumber: "SEC-2024-003456",
-    taxId: "345-678-901-000",
-    capacity: 4500,
-    capacityUnit: "tons",
-    operatingStatus: "operational",
-    cropYear: "2024-2025",
-    startDate: "2024-09-01",
-    endDate: "2025-05-31",
-    managerName: "Mr. Pedro Reyes",
-    managerPhone: "+63 35 345 6789",
-    managerEmail: "pedro.reyes@tolong.com.ph",
-    coordinates: {
-      latitude: 9.5000,
-      longitude: 123.2000
-    },
-    facilities: ["Sugar Processing", "Molasses Storage", "Quality Control Lab", "Warehouse"],
-    certifications: ["ISO 9001:2015", "HACCP", "GMP"],
-    createdAt: "2024-02-01",
-    updatedAt: "2024-02-01"
-  },
-  {
-    id: "MILL-004",
-    plantCode: "BUGAY",
-    fullName: "Bugay Sugar Milling Corporation",
-    shortName: "BUGAY",
-    description: "Modern sugar processing facility with advanced technology and sustainable practices.",
-    address: "Industrial Complex, Barangay Bugay",
-    city: "Mabinay",
-    province: "Negros Oriental",
-    postalCode: "6208",
-    contactPerson: "Engr. Ana Lopez",
-    phone: "+63 35 456 7890",
-    email: "info@bugay.com.ph",
-    website: "www.bugay.com.ph",
-    registrationNumber: "SEC-2024-004567",
-    taxId: "456-789-012-000",
-    capacity: 5500,
-    capacityUnit: "tons",
-    operatingStatus: "operational",
-    cropYear: "2024-2025",
-    startDate: "2024-09-01",
-    endDate: "2025-05-31",
-    managerName: "Engr. Ana Lopez",
-    managerPhone: "+63 35 456 7890",
-    managerEmail: "ana.lopez@bugay.com.ph",
-    coordinates: {
-      latitude: 9.8000,
-      longitude: 122.9000
-    },
-    facilities: ["Sugar Processing", "Molasses Storage", "Quality Control Lab", "Warehouse", "Loading Bay", "Environmental Lab"],
-    certifications: ["ISO 9001:2015", "HACCP", "GMP", "Environmental Management System"],
-    createdAt: "2024-02-15",
-    updatedAt: "2024-02-15"
-  },
-  {
-    id: "MILL-005",
-    plantCode: "CAB",
-    fullName: "Central Azucarera de Bais",
-    shortName: "CAB",
-    description: "Historic sugar mill with modern upgrades, serving the Bais region with quality sugar production.",
-    address: "Sugar Mill Complex, Barangay Bais",
-    city: "Bais City",
-    province: "Negros Oriental",
-    postalCode: "6206",
-    contactPerson: "Mr. Carlos Mendoza",
-    phone: "+63 35 567 8901",
-    email: "info@cab.com.ph",
-    website: "www.cab.com.ph",
-    registrationNumber: "SEC-2024-005678",
-    taxId: "567-890-123-000",
-    capacity: 7000,
-    capacityUnit: "tons",
-    operatingStatus: "operational",
-    cropYear: "2024-2025",
-    startDate: "2024-09-01",
-    endDate: "2025-05-31",
-    managerName: "Mr. Carlos Mendoza",
-    managerPhone: "+63 35 567 8901",
-    managerEmail: "carlos.mendoza@cab.com.ph",
-    coordinates: {
-      latitude: 9.6000,
-      longitude: 123.1000
-    },
-    facilities: ["Sugar Processing", "Molasses Storage", "Quality Control Lab", "Warehouse", "Loading Bay", "Historical Museum"],
-    certifications: ["ISO 9001:2015", "HACCP", "GMP", "Heritage Site"],
-    createdAt: "2024-03-01",
-    updatedAt: "2024-03-01"
-  }
-]
+// Sugar mills data now comes from database via useSugarMills hook
 
 // Mock data removed - now using real database data via useAssociations hook
 
@@ -371,6 +168,26 @@ export default function SettingsPage() {
     clearError,
     clearValidationErrors
   } = useAssociations()
+
+  // Use the sugar mills hook for database integration
+  const {
+    sugarMills,
+    statistics: sugarMillStats,
+    provinces,
+    cities,
+    loading: sugarMillsLoading,
+    creating: creatingSugarMill,
+    updating: updatingSugarMill,
+    deleting: deletingSugarMill,
+    error: sugarMillsError,
+    validationErrors: sugarMillsValidationErrors,
+    createSugarMill,
+    updateSugarMill,
+    deleteSugarMill,
+    clearError: clearSugarMillsError,
+    clearValidationErrors: clearSugarMillsValidationErrors,
+    fetchLocations
+  } = useSugarMills()
 
   // Component is now using real database data via useAssociations hook
 
@@ -554,6 +371,31 @@ export default function SettingsPage() {
     }
   }
 
+  // Sugar mill handlers
+  const handleSugarMillSubmit = async (data: CreateSugarMillRequest | UpdateSugarMillRequest) => {
+    if ('id' in data) {
+      // Update operation
+      const result = await updateSugarMill(data as UpdateSugarMillRequest)
+      if (result) {
+        setSelectedSugarMill(null)
+        clearSugarMillsValidationErrors()
+      }
+    } else {
+      // Create operation
+      const result = await createSugarMill(data as CreateSugarMillRequest)
+      if (result) {
+        setShowAddSugarMill(false)
+        clearSugarMillsValidationErrors()
+      }
+    }
+  }
+
+  const handleDeleteSugarMill = async (id: number) => {
+    if (confirm('Are you sure you want to delete this sugar mill? This action cannot be undone.')) {
+      await deleteSugarMill(id)
+    }
+  }
+
   const filteredMemberships = planterMemberships.filter(membership => {
     const matchesSearch = membership.planterName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          membership.planterCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -563,11 +405,11 @@ export default function SettingsPage() {
   })
 
   const filteredSugarMills = sugarMills.filter(mill => {
-    const matchesSearch = mill.fullName.toLowerCase().includes(sugarMillSearchQuery.toLowerCase()) ||
-                         mill.shortName.toLowerCase().includes(sugarMillSearchQuery.toLowerCase()) ||
-                         mill.plantCode.toLowerCase().includes(sugarMillSearchQuery.toLowerCase()) ||
+    const matchesSearch = mill.full_name.toLowerCase().includes(sugarMillSearchQuery.toLowerCase()) ||
+                         mill.short_name.toLowerCase().includes(sugarMillSearchQuery.toLowerCase()) ||
+                         mill.plant_code.toLowerCase().includes(sugarMillSearchQuery.toLowerCase()) ||
                          mill.city.toLowerCase().includes(sugarMillSearchQuery.toLowerCase())
-    const matchesStatus = sugarMillFilterStatus === "all" || mill.operatingStatus === sugarMillFilterStatus
+    const matchesStatus = sugarMillFilterStatus === "all" || mill.operating_status === sugarMillFilterStatus
     return matchesSearch && matchesStatus
   })
 
@@ -746,16 +588,16 @@ export default function SettingsPage() {
                       <div className="flex items-center gap-2">
                         <Building2 className="h-5 w-5 text-green-600" />
                         <div>
-                          <CardTitle className="text-lg">{mill.plantCode}</CardTitle>
-                          <CardDescription className="text-sm">{mill.shortName}</CardDescription>
+                          <CardTitle className="text-lg">{mill.plant_code}</CardTitle>
+                          <CardDescription className="text-sm">{mill.short_name}</CardDescription>
                         </div>
                       </div>
-                      {getOperatingStatusBadge(mill.operatingStatus)}
+                      {getOperatingStatusBadge(mill.operating_status)}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div>
-                      <h4 className="font-medium text-gray-900 text-sm">{mill.fullName}</h4>
+                      <h4 className="font-medium text-gray-900 text-sm">{mill.full_name}</h4>
                       <p className="text-xs text-gray-600 mt-1 line-clamp-2">{mill.description}</p>
                     </div>
                     
@@ -777,60 +619,41 @@ export default function SettingsPage() {
                     <div className="border-t pt-3">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600">Capacity:</span>
-                        <span className="font-semibold">{mill.capacity.toLocaleString()} {mill.capacityUnit}</span>
+                        <span className="font-semibold">{mill.capacity?.toLocaleString() || 'N/A'} {mill.capacity_unit}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600">Crop Year:</span>
-                        <span>{mill.cropYear}</span>
+                        <span>{mill.crop_year}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600">Manager:</span>
-                        <span className="text-xs">{mill.managerName}</span>
+                        <span className="text-xs">{mill.manager_name}</span>
                       </div>
                     </div>
 
-                    {/* Facilities */}
-                    <div className="border-t pt-3">
-                      <div className="text-xs text-gray-600 mb-2">Facilities:</div>
-                      <div className="flex flex-wrap gap-1">
-                        {mill.facilities.slice(0, 3).map((facility, index) => (
-                          <Badge key={index} variant="outline" className="text-xs bg-gray-50">
-                            {facility}
-                          </Badge>
-                        ))}
-                        {mill.facilities.length > 3 && (
-                          <Badge variant="outline" className="text-xs bg-gray-50">
-                            +{mill.facilities.length - 3} more
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
 
-                    {/* Certifications */}
-                    <div className="border-t pt-3">
-                      <div className="text-xs text-gray-600 mb-2">Certifications:</div>
-                      <div className="flex flex-wrap gap-1">
-                        {mill.certifications.slice(0, 2).map((cert, index) => (
-                          <Badge key={index} variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                            {cert}
-                          </Badge>
-                        ))}
-                        {mill.certifications.length > 2 && (
-                          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                            +{mill.certifications.length - 2} more
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
+
+
                   </CardContent>
                   <CardFooter className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => setSelectedSugarMill(mill)}
+                    >
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Building2 className="h-4 w-4 mr-2" />
-                      Details
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleDeleteSugarMill(mill.id)}
+                      disabled={deletingSugarMill}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
                     </Button>
                   </CardFooter>
                 </Card>
@@ -865,13 +688,13 @@ export default function SettingsPage() {
                         <TableRow key={mill.id}>
                           <TableCell className="font-medium">
                             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                              {mill.plantCode}
+                              {mill.plant_code}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             <div>
-                              <div className="font-medium">{mill.shortName}</div>
-                              <div className="text-sm text-gray-500">{mill.fullName}</div>
+                              <div className="font-medium">{mill.short_name}</div>
+                              <div className="text-sm text-gray-500">{mill.full_name}</div>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -882,16 +705,16 @@ export default function SettingsPage() {
                           </TableCell>
                           <TableCell>
                             <div className="text-sm font-medium">
-                              {mill.capacity.toLocaleString()} {mill.capacityUnit}
+                              {mill.capacity?.toLocaleString() || 'N/A'} {mill.capacity_unit}
                             </div>
                           </TableCell>
                           <TableCell>
-                            {getOperatingStatusBadge(mill.operatingStatus)}
+                            {getOperatingStatusBadge(mill.operating_status)}
                           </TableCell>
                           <TableCell>
                             <div>
-                              <div className="text-sm">{mill.managerName}</div>
-                              <div className="text-xs text-gray-500">{mill.managerEmail}</div>
+                              <div className="text-sm">{mill.manager_name}</div>
+                              <div className="text-xs text-gray-500">{mill.manager_email}</div>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -902,11 +725,20 @@ export default function SettingsPage() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <Button variant="outline" size="sm">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setSelectedSugarMill(mill)}
+                              >
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button variant="outline" size="sm">
-                                <Building2 className="h-4 w-4" />
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleDeleteSugarMill(mill.id)}
+                                disabled={deletingSugarMill}
+                              >
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           </TableCell>
@@ -938,7 +770,7 @@ export default function SettingsPage() {
                     <CheckCircle className="h-5 w-5 text-blue-600" />
                     <div>
                       <div className="text-2xl font-bold text-blue-800">
-                        {filteredSugarMills.filter(m => m.operatingStatus === "operational").length}
+                        {filteredSugarMills.filter(m => m.operating_status === "operational").length}
                       </div>
                       <div className="text-sm text-blue-600">Operational</div>
                     </div>
@@ -952,7 +784,7 @@ export default function SettingsPage() {
                     <Clock className="h-5 w-5 text-yellow-600" />
                     <div>
                       <div className="text-2xl font-bold text-yellow-800">
-                        {filteredSugarMills.filter(m => m.operatingStatus === "maintenance").length}
+                        {filteredSugarMills.filter(m => m.operating_status === "maintenance").length}
                       </div>
                       <div className="text-sm text-yellow-600">Under Maintenance</div>
                     </div>
@@ -966,7 +798,7 @@ export default function SettingsPage() {
                     <DollarSign className="h-5 w-5 text-purple-600" />
                     <div>
                       <div className="text-2xl font-bold text-purple-800">
-                        {filteredSugarMills.reduce((total, mill) => total + mill.capacity, 0).toLocaleString()}
+                        {filteredSugarMills.reduce((total, mill) => total + (mill.capacity || 0), 0).toLocaleString()}
                       </div>
                       <div className="text-sm text-purple-600">Total Capacity (tons)</div>
                     </div>
@@ -974,6 +806,43 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Sugar Mill Form Dialog */}
+            <Dialog open={showAddSugarMill} onOpenChange={setShowAddSugarMill}>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Create New Sugar Mill</DialogTitle>
+                  <DialogDescription>
+                    Add a new sugar milling facility to the system
+                  </DialogDescription>
+                </DialogHeader>
+                <SugarMillForm
+                  onSubmit={handleSugarMillSubmit}
+                  loading={creatingSugarMill}
+                  validationErrors={sugarMillsValidationErrors}
+                  onClearValidationErrors={clearSugarMillsValidationErrors}
+                />
+              </DialogContent>
+            </Dialog>
+
+            {/* Edit Sugar Mill Dialog */}
+            <Dialog open={!!selectedSugarMill} onOpenChange={() => setSelectedSugarMill(null)}>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Edit Sugar Mill</DialogTitle>
+                  <DialogDescription>
+                    Update the details for {selectedSugarMill?.short_name}
+                  </DialogDescription>
+                </DialogHeader>
+                <SugarMillForm
+                  initialData={selectedSugarMill || undefined}
+                  onSubmit={handleSugarMillSubmit}
+                  loading={updatingSugarMill}
+                  validationErrors={sugarMillsValidationErrors}
+                  onClearValidationErrors={clearSugarMillsValidationErrors}
+                />
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           {/* Associations Management Tab */}

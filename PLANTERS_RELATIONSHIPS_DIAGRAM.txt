@@ -1,0 +1,163 @@
+PLANTERS SYSTEM DATABASE RELATIONSHIPS
+==========================================
+
+Entity Relationship Diagram (Text-based)
+
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   SUGAR MILLS   │    │   ASSOCIATIONS  │    │     USERS       │
+│                 │    │                 │    │                 │
+│ • id (PK)       │    │ • id (PK)       │    │ • id (PK)       │
+│ • plant_code    │    │ • name          │    │ • email         │
+│ • full_name     │    │ • short_name    │    │ • password_hash │
+│ • short_name    │    │ • sugar_mill_id │    │ • name          │
+│ • city          │    │ • assoc_type    │    │ • phone         │
+│ • province      │    │ • status        │    │ • status        │
+│ • operating_    │    │ • member_count  │    │ • created_at    │
+│   status        │    │ • created_at    │    │ • updated_at    │
+│ • capacity      │    │ • updated_at    │    │                 │
+│ • crop_year     │    │                 │    │                 │
+│ • created_at    │    │                 │    │                 │
+│ • updated_at    │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │ 1:N                   │ 1:N                   │ 1:0..1
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│     PLANTERS    │    │PLANTER_MEMBERSHIPS│   │                 │
+│                 │    │                 │    │                 │
+│ • id (PK)       │    │ • id (PK)       │    │                 │
+│ • user_id (FK)  │    │ • planter_id    │    │                 │
+│ • planter_code  │    │ • association_id│    │                 │
+│ • first_name    │    │ • sugar_mill_id │    │                 │
+│ • middle_name   │    │ • crop_year     │    │                 │
+│ • last_name     │    │ • membership_   │    │                 │
+│ • contact_      │    │   status        │    │                 │
+│   number        │    │ • dues_status   │    │                 │
+│ • email_address │    │ • has_deliveries│    │                 │
+│ • valid_id_type │    │ • can_transfer  │    │                 │
+│ • valid_id_     │    │ • total_        │    │                 │
+│   number        │    │   delivered     │    │                 │
+│ • complete_     │    │ • created_at    │    │                 │
+│   address       │    │ • updated_at    │    │                 │
+│ • barangay      │    │                 │    │                 │
+│ • municipality  │    │                 │    │                 │
+│ • province      │    │                 │    │                 │
+│ • sugar_mill_id │    │                 │    │                 │
+│ • association_id│    │                 │    │                 │
+│ • crop_year     │    │                 │    │                 │
+│ • total_farm_   │    │                 │    │                 │
+│   area          │    │                 │    │                 │
+│ • sugarcane_    │    │                 │    │                 │
+│   area          │    │                 │    │                 │
+│ • status        │    │                 │    │                 │
+│ • membership_   │    │                 │    │                 │
+│   status        │    │                 │    │                 │
+│ • registration_ │    │                 │    │                 │
+│   date          │    │                 │    │                 │
+│ • created_at    │    │                 │    │                 │
+│ • updated_at    │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │
+         │ 1:N
+         │
+         ▼
+┌─────────────────┐
+│  PLANTER_FARMS  │
+│                 │
+│ • id (PK)       │
+│ • planter_id    │
+│ • farm_name     │
+│ • farm_code     │
+│ • barangay      │
+│ • municipality  │
+│ • province      │
+│ • total_area    │
+│ • sugarcane_    │
+│   area          │
+│ • other_crops_  │
+│   area          │
+│ • soil_type     │
+│ • irrigation_   │
+│   type          │
+│ • farm_status   │
+│ • created_at    │
+│ • updated_at    │
+└─────────────────┘
+
+BUSINESS RULES
+==============
+
+1. CROP YEAR EXCLUSIVITY
+   - One planter can only have ONE membership per crop year
+   - Enforced by UNIQUE constraint on (planter_id, crop_year)
+
+2. ASSOCIATION-SUGAR MILL ALIGNMENT
+   - Association must be associated with the same sugar mill
+   - Enforced by foreign key relationships
+
+3. TRANSFER RESTRICTIONS
+   - If planter has deliveries (has_deliveries = TRUE)
+   - Then can_transfer = FALSE
+   - Prevents association transfers during active crop year
+
+4. MEMBERSHIP STATUS FLOW
+   - pending_membership → member (after approval)
+   - member → inactive (if suspended)
+   - inactive → member (if reactivated)
+
+5. DELIVERY ELIGIBILITY
+   - Only active members can make deliveries
+   - Delivery count and total tracked per membership
+
+KEY CONSTRAINTS
+===============
+
+PRIMARY KEYS:
+- sugar_mills.id
+- associations.id
+- users.id
+- planters.id
+- planter_memberships.id
+- planter_farms.id
+
+UNIQUE CONSTRAINTS:
+- sugar_mills.plant_code
+- planters.planter_code
+- planter_memberships.(planter_id, crop_year)
+
+FOREIGN KEY CONSTRAINTS:
+- associations.sugar_mill_id → sugar_mills.id
+- planters.user_id → users.id
+- planters.sugar_mill_id → sugar_mills.id
+- planters.association_id → associations.id
+- planter_memberships.planter_id → planters.id
+- planter_memberships.association_id → associations.id
+- planter_memberships.sugar_mill_id → sugar_mills.id
+- planter_farms.planter_id → planters.id
+
+INDEXES FOR PERFORMANCE
+=======================
+
+COMPOSITE INDEXES:
+- planters(status, membership_status)
+- planter_memberships(membership_status, dues_status)
+- planter_farms(farm_status, province)
+
+LOCATION INDEXES:
+- planters(province, municipality)
+- planter_farms(province, municipality)
+- sugar_mills(city, province)
+
+SEARCH INDEXES:
+- planters(last_name, first_name)
+- planters(email_address)
+- planters(contact_number)
+- planters(valid_id_type, valid_id_number)
+
+STATUS INDEXES:
+- planters(status)
+- planter_memberships(membership_status)
+- planter_farms(farm_status)
+- associations(status)
+- sugar_mills(operating_status)

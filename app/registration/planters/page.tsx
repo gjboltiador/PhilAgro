@@ -12,41 +12,58 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Filter, MoreHorizontal, Plus, Search, User, MapPin, Upload, Camera, FileImage, Building2, Users, AlertTriangle } from "lucide-react"
+import { Filter, MoreHorizontal, Plus, Search, User, MapPin, Upload, Camera, FileImage, Building2, Users, AlertTriangle, Edit, Trash2, Eye, Loader2, CheckCircle } from "lucide-react"
 import { useState, useEffect } from "react"
+import { usePlanters } from "@/hooks/use-planters"
+import { Planter, CreatePlanterRequest } from "@/lib/planters-dao"
+import { useToast } from "@/hooks/use-toast"
 
-// Sugar Mill data structure
+// Sugar Mill data structure (matching API response)
 interface SugarMill {
-  id: string
-  plantCode: string
-  fullName: string
-  shortName: string
+  id: number
+  plant_code: string
+  full_name: string
+  short_name: string
   city: string
   province: string
-  operatingStatus: "operational" | "maintenance" | "closed" | "seasonal"
+  operating_status: "operational" | "maintenance" | "closed" | "seasonal"
 }
 
-// Association data structure
+// Association data structure (matching API response)
 interface Association {
-  id: string
-  name: string
-  shortName: string
-  sugarMillId: string
-  sugarMillCode: string
-  city: string
-  province: string
+  association_id: number
+  association_name: string
+  short_name: string
+  sugar_mill_id?: number
+  sugar_mill_code?: string
+  city?: string
+  province?: string
   status: "active" | "inactive"
-  isAccredited: boolean
+  is_accredited?: boolean
 }
 
 export default function PlantersRegistrationPage() {
+  const { toast } = useToast()
+  const { planters, loading, error, createPlanter, updatePlanter, deletePlanter, refreshPlanters } = usePlanters()
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editingPlanter, setEditingPlanter] = useState<Planter | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("all")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
+  
   const [formData, setFormData] = useState({
     firstName: "",
     middleName: "",
     lastName: "",
-    contactNumber: "+63 912 345 6789",
-    emailAddress: "farmer@example.com",
+    suffix: "",
+    gender: "",
+    birthDate: "",
+    contactNumber: "",
+    emailAddress: "",
     completeAddress: "",
     barangay: "",
     municipality: "",
@@ -59,7 +76,7 @@ export default function PlantersRegistrationPage() {
     sugarMillCode: "",
     associationId: "",
     associationName: "",
-    cropYear: "2024-2025"
+    farmSize: ""
   })
 
   const provinces = [
@@ -86,113 +103,92 @@ export default function PlantersRegistrationPage() {
     "Other Government-Issued ID"
   ]
 
-  // Mock data for Sugar Mills
-  const sugarMills: SugarMill[] = [
-    {
-      id: "MILL-001",
-      plantCode: "URSUMCO",
-      fullName: "United Robina Sugar Milling Corporation",
-      shortName: "URSUMCO",
-      city: "Dumaguete City",
-      province: "Negros Oriental",
-      operatingStatus: "operational"
-    },
-    {
-      id: "MILL-002",
-      plantCode: "SONEDCO",
-      fullName: "Southern Negros Development Corporation",
-      shortName: "SONEDCO",
-      city: "Bayawan City",
-      province: "Negros Oriental",
-      operatingStatus: "operational"
-    },
-    {
-      id: "MILL-003",
-      plantCode: "TOLONG",
-      fullName: "Tolong Sugar Milling Company",
-      shortName: "TOLONG",
-      city: "Tolong",
-      province: "Negros Oriental",
-      operatingStatus: "operational"
-    },
-    {
-      id: "MILL-004",
-      plantCode: "BUGAY",
-      fullName: "Bugay Sugar Milling Corporation",
-      shortName: "BUGAY",
-      city: "Mabinay",
-      province: "Negros Oriental",
-      operatingStatus: "operational"
-    },
-    {
-      id: "MILL-005",
-      plantCode: "CAB",
-      fullName: "Central Azucarera de Bais",
-      shortName: "CAB",
-      city: "Bais City",
-      province: "Negros Oriental",
-      operatingStatus: "operational"
-    }
+  const genderOptions = [
+    { value: "male", label: "Male" },
+    { value: "female", label: "Female" },
+    { value: "other", label: "Other" }
   ]
 
-  // Mock data for Associations
-  const associations: Association[] = [
-    {
-      id: "ASSO-001",
-      name: "Negros Oriental Sugar Planters Association",
-      shortName: "NOSPA",
-      sugarMillId: "MILL-001",
-      sugarMillCode: "URSUMCO",
-      city: "Dumaguete City",
-      province: "Negros Oriental",
-      status: "active",
-      isAccredited: true
-    },
-    {
-      id: "ASSO-002",
-      name: "Bayawan Sugar Farmers Cooperative",
-      shortName: "BASUCO",
-      sugarMillId: "MILL-002",
-      sugarMillCode: "SONEDCO",
-      city: "Bayawan City",
-      province: "Negros Oriental",
-      status: "active",
-      isAccredited: true
-    },
-    {
-      id: "ASSO-003",
-      name: "Mabinay Sugar Planters Union",
-      shortName: "MASPU",
-      sugarMillId: "MILL-004",
-      sugarMillCode: "BUGAY",
-      city: "Mabinay",
-      province: "Negros Oriental",
-      status: "active",
-      isAccredited: true
-    },
-    {
-      id: "ASSO-004",
-      name: "Tolong Sugar Planters Association",
-      shortName: "TOSPA",
-      sugarMillId: "MILL-003",
-      sugarMillCode: "TOLONG",
-      city: "Tolong",
-      province: "Negros Oriental",
-      status: "active",
-      isAccredited: true
-    },
-    {
-      id: "ASSO-005",
-      name: "Bais Sugar Planters Cooperative",
-      shortName: "BASUCO",
-      sugarMillId: "MILL-005",
-      sugarMillCode: "CAB",
-      city: "Bais City",
-      province: "Negros Oriental",
-      status: "active",
-      isAccredited: true
-    }
+  const suffixOptions = [
+    "Jr.",
+    "Sr.",
+    "II",
+    "III",
+    "IV",
+    "V"
   ]
+
+  // State for Sugar Mills and Associations from database
+  const [sugarMills, setSugarMills] = useState<SugarMill[]>([])
+  const [associations, setAssociations] = useState<Association[]>([])
+  const [loadingSugarMills, setLoadingSugarMills] = useState(false)
+  const [loadingAssociations, setLoadingAssociations] = useState(false)
+
+  // Fetch Sugar Mills from database
+  const fetchSugarMills = async () => {
+    try {
+      setLoadingSugarMills(true)
+      const response = await fetch('/api/sugar-mills')
+      const result = await response.json()
+      
+      if (result.success) {
+        console.log('Sugar Mills fetched:', result.data)
+        setSugarMills(result.data || [])
+      } else {
+        console.error('Failed to fetch sugar mills:', result.message)
+        toast({
+          title: "Error",
+          description: "Failed to load sugar mills",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching sugar mills:', error)
+      toast({
+        title: "Error",
+        description: "Failed to load sugar mills",
+        variant: "destructive",
+      })
+    } finally {
+      setLoadingSugarMills(false)
+    }
+  }
+
+  // Fetch Associations from database
+  const fetchAssociations = async () => {
+    try {
+      setLoadingAssociations(true)
+      const response = await fetch('/api/associations')
+      const result = await response.json()
+      
+      if (result.success) {
+        console.log('Associations fetched:', result.data)
+        setAssociations(result.data || [])
+      } else {
+        console.error('Failed to fetch associations:', result.message)
+        toast({
+          title: "Error",
+          description: "Failed to load associations",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching associations:', error)
+      toast({
+        title: "Error",
+        description: "Failed to load associations",
+        variant: "destructive",
+      })
+    } finally {
+      setLoadingAssociations(false)
+    }
+  }
+
+  // Load data on component mount
+  useEffect(() => {
+    fetchSugarMills()
+    fetchAssociations()
+  }, [])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -215,20 +211,20 @@ export default function PlantersRegistrationPage() {
   const getFilteredAssociations = () => {
     if (!formData.sugarMillId) return []
     return associations.filter(association => 
-      association.sugarMillId === formData.sugarMillId && 
+      association.sugar_mill_id?.toString() === formData.sugarMillId && 
       association.status === "active" && 
-      association.isAccredited
+      (association.is_accredited !== false) // Default to true if not specified
     )
   }
 
   // Get selected sugar mill details
   const getSelectedSugarMill = () => {
-    return sugarMills.find(mill => mill.id === formData.sugarMillId)
+    return sugarMills.find(mill => mill.id?.toString() === formData.sugarMillId)
   }
 
   // Get selected association details
   const getSelectedAssociation = () => {
-    return associations.find(association => association.id === formData.associationId)
+    return associations.find(association => association.association_id?.toString() === formData.associationId)
   }
 
   const handleFileChange = (field: string, file: File | null) => {
@@ -248,18 +244,78 @@ export default function PlantersRegistrationPage() {
     handleFileChange("validIdPicture", file)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission here
-    console.log("Form submitted:", formData)
-    setIsDialogOpen(false)
-    // Reset form
+    setIsSubmitting(true)
+
+    try {
+      const planterData: CreatePlanterRequest = {
+        first_name: formData.firstName,
+        middle_name: formData.middleName || undefined,
+        last_name: formData.lastName,
+        suffix: formData.suffix || undefined,
+        gender: formData.gender as 'male' | 'female' | 'other',
+        birthdate: formData.birthDate || undefined,
+        address: formData.completeAddress,
+        contact_number: formData.contactNumber || undefined,
+        email: formData.emailAddress || undefined,
+        id_type: formData.validIdType || undefined,
+        id_number: formData.validIdNumber || undefined,
+        farm_size: formData.farmSize ? parseFloat(formData.farmSize) : undefined,
+        sugar_mill_id: formData.sugarMillId ? parseInt(formData.sugarMillId) : undefined,
+        association_id: formData.associationId ? parseInt(formData.associationId) : undefined,
+        status: 'active'
+      }
+
+      if (isEditMode && editingPlanter) {
+        await updatePlanter({
+          id: editingPlanter.id,
+          ...planterData
+        })
+        setSuccessMessage("Planter updated successfully!")
+        setShowSuccessAnimation(true)
+        toast({
+          title: "Success",
+          description: "Planter updated successfully",
+        })
+      } else {
+        await createPlanter(planterData)
+        setSuccessMessage("Planter registered successfully!")
+        setShowSuccessAnimation(true)
+        toast({
+          title: "Success",
+          description: "Planter registered successfully",
+        })
+      }
+
+      // Close dialog and reset form after a short delay to show success animation
+      setTimeout(() => {
+        setIsDialogOpen(false)
+        resetForm()
+        setShowSuccessAnimation(false)
+        setSuccessMessage("")
+      }, 2000)
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save planter",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const resetForm = () => {
     setFormData({
       firstName: "",
       middleName: "",
       lastName: "",
-      contactNumber: "+63 912 345 6789",
-      emailAddress: "farmer@example.com",
+      suffix: "",
+      gender: "",
+      birthDate: "",
+      contactNumber: "",
+      emailAddress: "",
       completeAddress: "",
       barangay: "",
       municipality: "",
@@ -272,89 +328,98 @@ export default function PlantersRegistrationPage() {
       sugarMillCode: "",
       associationId: "",
       associationName: "",
-      cropYear: "2024-2025"
+      farmSize: ""
     })
+    setIsEditMode(false)
+    setEditingPlanter(null)
   }
 
-  const planters = [
-    {
-      id: "P-1001",
-      name: "Juan Dela Cruz",
-      location: "Negros Occidental",
-      area: "25 hectares",
-      registrationDate: "Jan 15, 2024",
-      status: "Active",
-      sugarMill: "URSUMCO",
-      association: "NOSPA",
-      cropYear: "2024-2025"
-    },
-    {
-      id: "P-1002",
-      name: "Maria Santos",
-      location: "Batangas",
-      area: "18 hectares",
-      registrationDate: "Feb 3, 2024",
-      status: "Active",
-      sugarMill: "SONEDCO",
-      association: "BASUCO",
-      cropYear: "2024-2025"
-    },
-    {
-      id: "P-1003",
-      name: "Pedro Reyes",
-      location: "Iloilo",
-      area: "32 hectares",
-      registrationDate: "Mar 12, 2024",
-      status: "Active",
-      sugarMill: "TOLONG",
-      association: "TOSPA",
-      cropYear: "2024-2025"
-    },
-    {
-      id: "P-1004",
-      name: "Ana Gonzales",
-      location: "Tarlac",
-      area: "15 hectares",
-      registrationDate: "Apr 5, 2024",
-      status: "Pending",
-      sugarMill: "BUGAY",
-      association: "MASPU",
-      cropYear: "2024-2025"
-    },
-    {
-      id: "P-1005",
-      name: "Carlos Mendoza",
-      location: "Pampanga",
-      area: "22 hectares",
-      registrationDate: "Apr 18, 2024",
-      status: "Inactive",
-      sugarMill: "CAB",
-      association: "BASUCO",
-      cropYear: "2024-2025"
-    },
-    {
-      id: "P-1006",
-      name: "Sofia Lim",
-      location: "Bukidnon",
-      area: "40 hectares",
-      registrationDate: "May 2, 2024",
-      status: "Active",
-      sugarMill: "URSUMCO",
-      association: "NOSPA",
-      cropYear: "2024-2025"
-    },
-    {
-      id: "P-1007",
-      name: "Miguel Tan",
-      location: "Davao",
-      area: "28 hectares",
-      registrationDate: "May 20, 2024",
-      status: "Pending",
-      sugarMill: "SONEDCO",
-      association: "BASUCO",
-      cropYear: "2024-2025"
-    },
-  ]
+  const handleEditPlanter = (planter: Planter) => {
+    setEditingPlanter(planter)
+    setIsEditMode(true)
+    
+    // Refresh data to ensure we have the latest sugar mills and associations
+    fetchSugarMills()
+    fetchAssociations()
+    
+    // Format birthdate for input field (YYYY-MM-DD format)
+    const formatDateForInput = (dateString: string | undefined) => {
+      if (!dateString) return ""
+      try {
+        const date = new Date(dateString)
+        if (isNaN(date.getTime())) return ""
+        return date.toISOString().split('T')[0] // Returns YYYY-MM-DD
+      } catch {
+        return ""
+      }
+    }
+    
+    setFormData({
+      firstName: planter.first_name,
+      middleName: planter.middle_name || "",
+      lastName: planter.last_name,
+      suffix: planter.suffix || "",
+      gender: planter.gender,
+      birthDate: formatDateForInput(planter.birthdate),
+      contactNumber: planter.contact_number || "",
+      emailAddress: planter.email || "",
+      completeAddress: planter.address,
+      barangay: "",
+      municipality: "",
+      province: "",
+      profilePicture: null,
+      validIdType: planter.id_type || "",
+      validIdNumber: planter.id_number || "",
+      validIdPicture: null,
+      sugarMillId: planter.sugar_mill_id?.toString() || "",
+      sugarMillCode: planter.sugar_mill_code || "",
+      associationId: planter.association_id?.toString() || "",
+      associationName: planter.association_name || "",
+      farmSize: planter.farm_size?.toString() || ""
+    })
+    setIsDialogOpen(true)
+  }
+
+  const handleDeletePlanter = async (planter: Planter) => {
+    if (window.confirm(`Are you sure you want to delete ${planter.full_name}?`)) {
+      const success = await deletePlanter(planter.id)
+      if (success) {
+        toast({
+          title: "Success",
+          description: "Planter deleted successfully",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to delete planter",
+          variant: "destructive",
+        })
+      }
+    }
+  }
+
+  const handleViewPlanter = (planter: Planter) => {
+    // TODO: Implement view planter details
+    console.log("View planter:", planter)
+  }
+
+  const openCreateDialog = () => {
+    resetForm()
+    setIsEditMode(false)
+    setIsDialogOpen(true)
+  }
+
+  // Filter planters based on search and status
+  const filteredPlanters = planters.filter(planter => {
+    const matchesSearch = !searchTerm || 
+      planter.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      planter.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      planter.contact_number?.includes(searchTerm)
+    
+    const matchesStatus = statusFilter === "all" || planter.status === statusFilter
+    
+    return matchesSearch && matchesStatus
+  })
 
   return (
     <ProtectedRoute requiredPermission="farm_management">
@@ -367,21 +432,56 @@ export default function PlantersRegistrationPage() {
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-farm-green-600 hover:bg-farm-green-700">
+              <Button onClick={openCreateDialog} className="bg-farm-green-600 hover:bg-farm-green-700">
                 <Plus className="mr-2 h-4 w-4" />
                 Register New Planter
               </Button>
             </DialogTrigger>
-            <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] mx-auto overflow-y-auto">
+            <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+              {/* Success Animation Overlay */}
+              {showSuccessAnimation && (
+                <div className="absolute inset-0 bg-white/95 backdrop-blur-sm flex items-center justify-center z-50 rounded-lg">
+                  <div className="text-center animate-in fade-in-0 zoom-in-95 duration-300">
+                    <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                      <CheckCircle className="h-8 w-8 text-green-600 animate-in zoom-in-50 duration-500" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      {isEditMode ? "Planter Updated!" : "Planter Registered!"}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      {successMessage}
+                    </p>
+                    <div className="flex items-center justify-center space-x-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="p-6 py-8 custom-scrollbar">
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold text-farm-green-800">Register New Planter</DialogTitle>
+                <DialogTitle className="text-xl font-bold text-farm-green-800">
+                  {isEditMode ? "Edit Planter" : "Register New Planter"}
+                </DialogTitle>
                 <DialogDescription className="text-farm-green-600">
-                  Enter the planter's personal and address information
+                  {isEditMode ? "Update the planter's information" : "Enter the planter's personal and address information"}
                 </DialogDescription>
               </DialogHeader>
               
               <form onSubmit={handleSubmit} className="space-y-6 pr-2">
+                {/* Loading Overlay */}
+                {isSubmitting && (
+                  <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-40 rounded-lg">
+                    <div className="text-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-farm-green-600 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600">
+                        {isEditMode ? "Updating planter details..." : "Saving planter details..."}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 {/* Personal Information Section */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 pb-2 border-b border-farm-green-200">
@@ -400,6 +500,7 @@ export default function PlantersRegistrationPage() {
                         value={formData.firstName}
                         onChange={(e) => handleInputChange("firstName", e.target.value)}
                         className="border-gray-300 focus:border-farm-green-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        disabled={isSubmitting}
                         required
                       />
                     </div>
@@ -426,6 +527,58 @@ export default function PlantersRegistrationPage() {
                         placeholder="Enter last name"
                         value={formData.lastName}
                         onChange={(e) => handleInputChange("lastName", e.target.value)}
+                        className="border-gray-300 focus:border-farm-green-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="suffix" className="text-sm font-medium text-gray-700">
+                        Suffix
+                      </Label>
+                      <Select value={formData.suffix} onValueChange={(value) => handleInputChange("suffix", value)}>
+                        <SelectTrigger className="border-gray-300 focus:border-farm-green-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+                          <SelectValue placeholder="Select suffix" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {suffixOptions.map((suffix) => (
+                            <SelectItem key={suffix} value={suffix}>
+                              {suffix}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="gender" className="text-sm font-medium text-gray-700">
+                        Gender *
+                      </Label>
+                      <Select value={formData.gender} onValueChange={(value) => handleInputChange("gender", value)}>
+                        <SelectTrigger className="border-gray-300 focus:border-farm-green-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {genderOptions.map((gender) => (
+                            <SelectItem key={gender.value} value={gender.value}>
+                              {gender.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="birthDate" className="text-sm font-medium text-gray-700">
+                        Birth Date *
+                      </Label>
+                      <Input
+                        id="birthDate"
+                        type="date"
+                        value={formData.birthDate}
+                        onChange={(e) => handleInputChange("birthDate", e.target.value)}
                         className="border-gray-300 focus:border-farm-green-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                         required
                       />
@@ -695,18 +848,19 @@ export default function PlantersRegistrationPage() {
                       <Select 
                         value={formData.sugarMillId} 
                         onValueChange={(value) => handleInputChange("sugarMillId", value)}
+                        disabled={loadingSugarMills}
                       >
                         <SelectTrigger className="border-gray-300 focus:border-farm-green-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
-                          <SelectValue placeholder="Select Sugar Mill" />
+                          <SelectValue placeholder={loadingSugarMills ? "Loading..." : "Select Sugar Mill"} />
                         </SelectTrigger>
                         <SelectContent>
                           {sugarMills
                             .filter(mill => mill.operatingStatus === "operational")
                             .map((mill) => (
-                              <SelectItem key={mill.id} value={mill.id}>
+                              <SelectItem key={mill.id} value={mill.id.toString()}>
                                 <div className="flex flex-col">
-                                  <span className="font-medium">{mill.plantCode}</span>
-                                  <span className="text-xs text-gray-500">{mill.fullName}</span>
+                                  <span className="font-medium">{mill.plant_code}</span>
+                                  <span className="text-xs text-gray-500">{mill.full_name}</span>
                                 </div>
                               </SelectItem>
                             ))}
@@ -726,24 +880,27 @@ export default function PlantersRegistrationPage() {
                       <Select 
                         value={formData.associationId} 
                         onValueChange={(value) => {
-                          const association = associations.find(a => a.id === value)
+                          const association = associations.find(a => a.association_id?.toString() === value)
                           setFormData(prev => ({
                             ...prev,
                             associationId: value,
-                            associationName: association?.name || ""
+                            associationName: association?.association_name || ""
                           }))
                         }}
-                        disabled={!formData.sugarMillId}
+                        disabled={!formData.sugarMillId || loadingAssociations}
                       >
                         <SelectTrigger className="border-gray-300 focus:border-farm-green-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
-                          <SelectValue placeholder={formData.sugarMillId ? "Select Association" : "Select Sugar Mill first"} />
+                          <SelectValue placeholder={
+                            loadingAssociations ? "Loading..." : 
+                            formData.sugarMillId ? "Select Association" : "Select Sugar Mill first"
+                          } />
                         </SelectTrigger>
                         <SelectContent>
                           {getFilteredAssociations().map((association) => (
-                            <SelectItem key={association.id} value={association.id}>
+                            <SelectItem key={association.association_id} value={association.association_id?.toString() || ""}>
                               <div className="flex flex-col">
-                                <span className="font-medium">{association.shortName}</span>
-                                <span className="text-xs text-gray-500">{association.name}</span>
+                                <span className="font-medium">{association.short_name}</span>
+                                <span className="text-xs text-gray-500">{association.association_name}</span>
                               </div>
                             </SelectItem>
                           ))}
@@ -791,11 +948,11 @@ export default function PlantersRegistrationPage() {
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <Building2 className="h-4 w-4 text-green-600" />
-                              <span className="font-medium">{getSelectedSugarMill()?.plantCode}</span>
+                              <span className="font-medium">{getSelectedSugarMill()?.plant_code}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <Users className="h-4 w-4 text-blue-600" />
-                              <span className="font-medium">{getSelectedAssociation()?.shortName}</span>
+                              <span className="font-medium">{getSelectedAssociation()?.short_name}</span>
                             </div>
                             <div className="text-xs text-gray-600 mt-2">
                               Crop Year: {formData.cropYear}
@@ -817,15 +974,26 @@ export default function PlantersRegistrationPage() {
                     type="button"
                     variant="outline"
                     onClick={() => setIsDialogOpen(false)}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                    disabled={isSubmitting}
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
-                    className="bg-farm-green-600 hover:bg-farm-green-700 text-white"
+                    disabled={isSubmitting}
+                    className="bg-farm-green-600 hover:bg-farm-green-700 text-white disabled:opacity-50"
                   >
-                    Register Planter
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {isEditMode ? "Updating..." : "Registering..."}
+                      </>
+                    ) : (
+                      <>
+                        {isEditMode ? "Update Planter" : "Register Planter"}
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>
@@ -846,16 +1014,81 @@ export default function PlantersRegistrationPage() {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex w-full items-center gap-2 sm:max-w-sm">
                   <Search className="h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search planters..." className="h-9 border-farm-green-300" />
+                  <Input 
+                    placeholder="Search planters..." 
+                    className="h-9 border-farm-green-300"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="ml-auto h-9 gap-1 border-farm-green-300 hover:bg-farm-green-100 bg-transparent"
-                >
-                  <Filter className="h-4 w-4" />
-                  Filter
-                </Button>
+                <div className="flex gap-2">
+                  <Select value={statusFilter} onValueChange={(value: "active" | "inactive" | "all") => setStatusFilter(value)}>
+                    <SelectTrigger className="w-[140px] h-9 border-farm-green-300">
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 gap-1 border-farm-green-300 hover:bg-farm-green-100 bg-transparent"
+                  >
+                    <Filter className="h-4 w-4" />
+                    More Filters
+                  </Button>
+                </div>
+              </div>
+
+              {/* Summary Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card className="border-farm-green-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-farm-green-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Total Planters</p>
+                        <p className="text-2xl font-bold text-farm-green-800">{planters.length}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-farm-green-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <User className="h-5 w-5 text-green-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Active</p>
+                        <p className="text-2xl font-bold text-green-800">{planters.filter(p => p.status === 'active').length}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-farm-green-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">With Sugar Mill</p>
+                        <p className="text-2xl font-bold text-blue-800">{planters.filter(p => p.sugar_mill_id).length}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-farm-green-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-purple-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">With Association</p>
+                        <p className="text-2xl font-bold text-purple-800">{planters.filter(p => p.association_id).length}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               <div className="rounded-md border border-farm-green-200 bg-white/50">
@@ -866,48 +1099,72 @@ export default function PlantersRegistrationPage() {
                       <TableRow>
                         <TableHead>ID</TableHead>
                         <TableHead>Name</TableHead>
+                        <TableHead>Contact</TableHead>
                         <TableHead>Location</TableHead>
-                        <TableHead>Area</TableHead>
+                        <TableHead>Farm Size</TableHead>
                         <TableHead>Sugar Mill</TableHead>
                         <TableHead>Association</TableHead>
-                        <TableHead>Crop Year</TableHead>
-                        <TableHead>Registration Date</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Created</TableHead>
                         <TableHead className="w-[50px]"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {planters.map((planter) => (
+                      {filteredPlanters.map((planter) => (
                         <TableRow key={planter.id} className="hover:bg-farm-green-50/50">
                           <TableCell className="font-medium">{planter.id}</TableCell>
-                          <TableCell>{planter.name}</TableCell>
-                          <TableCell>{planter.location}</TableCell>
-                          <TableCell>{planter.area}</TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                              {planter.sugarMill}
-                            </Badge>
+                            <div>
+                              <div className="font-medium">{planter.full_name}</div>
+                              <div className="text-sm text-gray-500">{planter.gender}</div>
+                            </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                              {planter.association}
-                            </Badge>
+                            <div>
+                              {planter.contact_number && (
+                                <div className="text-sm">{planter.contact_number}</div>
+                              )}
+                              {planter.email && (
+                                <div className="text-sm text-gray-500">{planter.email}</div>
+                              )}
+                            </div>
                           </TableCell>
-                          <TableCell className="text-sm text-gray-600">{planter.cropYear}</TableCell>
-                          <TableCell>{planter.registrationDate}</TableCell>
+                          <TableCell>
+                            <div className="text-sm max-w-[200px] truncate" title={planter.address}>
+                              {planter.address}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {planter.farm_size ? `${planter.farm_size} hectares` : 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            {planter.sugar_mill_code ? (
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                {planter.sugar_mill_code}
+                              </Badge>
+                            ) : (
+                              <span className="text-gray-400">N/A</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {planter.association_name ? (
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                {planter.association_short_name || planter.association_name}
+                              </Badge>
+                            ) : (
+                              <span className="text-gray-400">N/A</span>
+                            )}
+                          </TableCell>
                           <TableCell>
                             <Badge
-                              variant={
-                                planter.status === "Active"
-                                  ? "default"
-                                  : planter.status === "Pending"
-                                    ? "outline"
-                                    : "secondary"
-                              }
-                              className={planter.status === "Active" ? "bg-farm-green-600 hover:bg-farm-green-700" : ""}
+                              variant={planter.status === "active" ? "default" : "secondary"}
+                              className={planter.status === "active" ? "bg-farm-green-600 hover:bg-farm-green-700" : ""}
                             >
                               {planter.status}
                             </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-gray-600">
+                            {new Date(planter.created_at).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
                             <DropdownMenu>
@@ -918,10 +1175,27 @@ export default function PlantersRegistrationPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>View Details</DropdownMenuItem>
-                                <DropdownMenuItem>Edit Registration</DropdownMenuItem>
-                                <DropdownMenuItem>Production History</DropdownMenuItem>
-                                <DropdownMenuItem>Assistance Records</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleViewPlanter(planter)}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleEditPlanter(planter)}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit Registration
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  Production History
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  Assistance Records
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleDeletePlanter(planter)}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
@@ -933,7 +1207,7 @@ export default function PlantersRegistrationPage() {
 
                 {/* Mobile Cards View */}
                 <div className="md:hidden space-y-3 p-3">
-                  {planters.map((planter) => (
+                  {filteredPlanters.map((planter) => (
                     <Card key={planter.id} className="border-farm-green-200 hover:bg-farm-green-50/30 transition-colors">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
@@ -943,60 +1217,62 @@ export default function PlantersRegistrationPage() {
                                 <User className="h-4 w-4 text-farm-green-600" />
                               </div>
                               <div>
-                                <h3 className="font-semibold text-farm-green-800">{planter.name}</h3>
-                                <p className="text-sm text-farm-green-600">{planter.id}</p>
+                                <h3 className="font-semibold text-farm-green-800">{planter.full_name}</h3>
+                                <p className="text-sm text-farm-green-600">ID: {planter.id}</p>
                               </div>
                             </div>
                             
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div>
-                                <span className="text-farm-green-600 font-medium">Location:</span>
-                                <p className="text-gray-700">{planter.location}</p>
+                                <span className="text-farm-green-600 font-medium">Contact:</span>
+                                <p className="text-gray-700">{planter.contact_number || 'N/A'}</p>
                               </div>
                               <div>
-                                <span className="text-farm-green-600 font-medium">Area:</span>
-                                <p className="text-gray-700">{planter.area}</p>
+                                <span className="text-farm-green-600 font-medium">Email:</span>
+                                <p className="text-gray-700">{planter.email || 'N/A'}</p>
+                              </div>
+                              <div>
+                                <span className="text-farm-green-600 font-medium">Farm Size:</span>
+                                <p className="text-gray-700">{planter.farm_size ? `${planter.farm_size} hectares` : 'N/A'}</p>
                               </div>
                               <div>
                                 <span className="text-farm-green-600 font-medium">Sugar Mill:</span>
                                 <div className="mt-1">
-                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
-                                    {planter.sugarMill}
-                                  </Badge>
+                                  {planter.sugar_mill_code ? (
+                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                                      {planter.sugar_mill_code}
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-gray-400 text-xs">N/A</span>
+                                  )}
                                 </div>
                               </div>
                               <div>
                                 <span className="text-farm-green-600 font-medium">Association:</span>
                                 <div className="mt-1">
-                                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
-                                    {planter.association}
-                                  </Badge>
+                                  {planter.association_name ? (
+                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                                      {planter.association_short_name || planter.association_name}
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-gray-400 text-xs">N/A</span>
+                                  )}
                                 </div>
-                              </div>
-                              <div>
-                                <span className="text-farm-green-600 font-medium">Crop Year:</span>
-                                <p className="text-gray-700">{planter.cropYear}</p>
-                              </div>
-                              <div>
-                                <span className="text-farm-green-600 font-medium">Registered:</span>
-                                <p className="text-gray-700">{planter.registrationDate}</p>
                               </div>
                               <div>
                                 <span className="text-farm-green-600 font-medium">Status:</span>
                                 <div className="mt-1">
                                   <Badge
-                                    variant={
-                                      planter.status === "Active"
-                                        ? "default"
-                                        : planter.status === "Pending"
-                                          ? "outline"
-                                          : "secondary"
-                                    }
-                                    className={planter.status === "Active" ? "bg-farm-green-600 hover:bg-farm-green-700" : ""}
+                                    variant={planter.status === "active" ? "default" : "secondary"}
+                                    className={planter.status === "active" ? "bg-farm-green-600 hover:bg-farm-green-700" : ""}
                                   >
                                     {planter.status}
                                   </Badge>
                                 </div>
+                              </div>
+                              <div className="col-span-2">
+                                <span className="text-farm-green-600 font-medium">Address:</span>
+                                <p className="text-gray-700 text-xs">{planter.address}</p>
                               </div>
                             </div>
                           </div>
@@ -1009,10 +1285,27 @@ export default function PlantersRegistrationPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>View Details</DropdownMenuItem>
-                              <DropdownMenuItem>Edit Registration</DropdownMenuItem>
-                              <DropdownMenuItem>Production History</DropdownMenuItem>
-                              <DropdownMenuItem>Assistance Records</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleViewPlanter(planter)}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEditPlanter(planter)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit Registration
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                Production History
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                Assistance Records
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleDeletePlanter(planter)}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
