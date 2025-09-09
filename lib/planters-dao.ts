@@ -23,7 +23,7 @@ export interface Planter {
   contact_number?: string
   email?: string
   profile_picture?: string
-  id_type?: string
+  id_type?: number
   id_number?: string
   id_picture?: string
   farm_size?: number
@@ -41,6 +41,7 @@ export interface Planter {
   association_name?: string
   association_short_name?: string
   full_name?: string
+  valid_id_type_name?: string
 }
 
 export interface CreatePlanterRequest {
@@ -57,7 +58,7 @@ export interface CreatePlanterRequest {
   contact_number?: string
   email?: string
   profile_picture?: string
-  id_type?: string
+  id_type?: number
   id_number?: string
   id_picture?: string
   farm_size?: number
@@ -120,10 +121,12 @@ export class PlantersDAO {
         sm.plant_code as sugar_mill_code,
         sm.full_name as sugar_mill_name,
         a.association_name,
-        a.short_name as association_short_name
+        a.short_name as association_short_name,
+        vit.name as valid_id_type_name
       FROM planters p
       LEFT JOIN sugar_mills sm ON p.sugar_mill_id = sm.id
       LEFT JOIN associations a ON p.association_id = a.association_id
+      LEFT JOIN valid_id_types vit ON p.id_type = vit.id
       WHERE 1=1
     `
     const params: any[] = []
@@ -215,10 +218,12 @@ export class PlantersDAO {
         sm.plant_code as sugar_mill_code,
         sm.full_name as sugar_mill_name,
         a.association_name,
-        a.short_name as association_short_name
+        a.short_name as association_short_name,
+        vit.name as valid_id_type_name
       FROM planters p
       LEFT JOIN sugar_mills sm ON p.sugar_mill_id = sm.id
       LEFT JOIN associations a ON p.association_id = a.association_id
+      LEFT JOIN valid_id_types vit ON p.id_type = vit.id
       WHERE p.id = ?
     `
 
@@ -252,7 +257,7 @@ export class PlantersDAO {
         user_id, sugar_mill_id, association_id, first_name, middle_name, last_name, suffix,
         gender, birthdate, address, contact_number, email, profile_picture, id_type, id_number,
         id_picture, farm_size, latitude, longitude, status, created_by_user_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
 
     const params = [
@@ -269,7 +274,7 @@ export class PlantersDAO {
       data.contact_number?.trim() || null,
       data.email?.trim() || null,
       data.profile_picture || null,
-      data.id_type?.trim() || null,
+      data.id_type || null,
       data.id_number?.trim() || null,
       data.id_picture || null,
       data.farm_size || null,
